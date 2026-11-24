@@ -14,13 +14,11 @@ npm run build      # static build in dist/
 
 Requires Node.js 18+. Your work auto-saves in the browser. Use **Forge menu → Save project** for a file copy.
 
-## Put it online (GitHub Pages)
+## Live site & redeploying
 
-```bash
-gh repo create forge-studio-pro --public --source . --push
-```
+Live at **https://forpc1428-eng.github.io/forge-studio-pro/**, served from the `gh-pages` branch.
 
-Then on GitHub, open **Settings → Pages → Source: GitHub Actions**. Every push to `main` rebuilds and publishes the site to `https://<you>.github.io/forge-studio-pro/`. The included workflow is `.github/workflows/deploy.yml`.
+**To publish your changes:** double-click **`Deploy to GitHub.bat`**. It saves your source to GitHub, builds the app, and publishes the build. The site updates about a minute later.
 
 ## Runs on the user's device
 

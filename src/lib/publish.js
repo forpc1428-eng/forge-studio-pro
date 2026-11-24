@@ -659,7 +659,12 @@ REM Builds app\build\outputs\apk\release\app-release.apk (needs JDK 17+ and the 
 cd /d "%~dp0"
 if not exist local.properties if defined ANDROID_HOME echo sdk.dir=%ANDROID_HOME:\=/%> local.properties
 if not exist local.properties if exist "%LOCALAPPDATA%\Android\Sdk" echo sdk.dir=%LOCALAPPDATA:\=/%/Android/Sdk> local.properties
-call gradlew.bat assembleRelease
+call "%~dp0gradlew.bat" assembleRelease
+if errorlevel 1 (
+  echo.
+  echo First attempt failed - often a slow network while downloading Gradle. Retrying once...
+  call "%~dp0gradlew.bat" assembleRelease
+)
 if errorlevel 1 (
   echo.
   echo Build failed. Easiest fix: open this folder in Android Studio, or upload it to GitHub - see HOW-TO-BUILD.txt
@@ -674,7 +679,7 @@ pause
   add('build-apk.sh', `#!/usr/bin/env sh
 cd "$(dirname "$0")" || exit 1
 [ -f local.properties ] || { [ -n "$ANDROID_HOME" ] && echo "sdk.dir=$ANDROID_HOME" > local.properties; }
-chmod +x gradlew && ./gradlew assembleRelease || { echo "Build failed. Open this folder in Android Studio, or upload it to GitHub (see HOW-TO-BUILD.txt)."; exit 1; }
+chmod +x gradlew && { ./gradlew assembleRelease || ./gradlew assembleRelease; } || { echo "Build failed. Open this folder in Android Studio, or upload it to GitHub (see HOW-TO-BUILD.txt)."; exit 1; }
 echo "Done! app/build/outputs/apk/release/app-release.apk"
 `, true);
   add('.gitignore', '.gradle/\nbuild/\napp/build/\nlocal.properties\n.idea/\n*.iml\n.DS_Store\n*.jks\n');
