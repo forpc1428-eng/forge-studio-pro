@@ -74,6 +74,7 @@ export const THEMES = {
   Paper: { bg: '#f4efe6', surface: '#fffaf1', surface2: '#efe7d8', text: '#2b2118', mute: '#87766a', line: '#e1d5c3', accent: '#c2410c', accent2: '#0f766e' },
   Cyber: { bg: '#05010d', surface: '#110727', surface2: '#1b0d3a', text: '#f0e9ff', mute: '#a58fd6', line: '#2c1a55', accent: '#ff00e5', accent2: '#00fff0' },
   Royal: { bg: '#0d0b1f', surface: '#17143a', surface2: '#211c50', text: '#f3f0ff', mute: '#a39ccf', line: '#2e2866', accent: '#f5c542', accent2: '#8b5cf6' },
+  'Liquid Glass': { bg: '#0b0718', surface: '#ffffff14', surface2: '#ffffff0f', text: '#f4f1ff', mute: '#b8b0dd', line: '#ffffff2e', accent: '#9d7bff', accent2: '#ff5fb0' },
   Candy: { bg: '#fff5fa', surface: '#ffffff', surface2: '#ffe8f3', text: '#3b0a2a', mute: '#a26b8c', line: '#ffd1e6', accent: '#ff2d95', accent2: '#7c3aed' },
 };
 

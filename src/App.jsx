@@ -12,6 +12,7 @@ import { LIBRARY } from './lib/library.js';
 import { DEVICES, THEMES } from './lib/constants.js';
 import { walk } from './lib/nodes.js';
 import { downloadBlob } from './lib/zip.js';
+import { getPrefs, setPref } from './lib/uiPrefs.js';
 
 export default function App() {
   const modal = useStore((s) => s.modal);
@@ -27,6 +28,8 @@ export default function App() {
   }, [project.pages]);
 
   return (
+    <>
+    <div className="liquid-bg" aria-hidden="true"><i /><i /><i /><i /></div>
     <div className="app">
       <TopBar />
       <main className="main">
@@ -43,6 +46,7 @@ export default function App() {
       {modal === 'palette' && <Palette />}
       <div className="toasts">{toasts.map((t) => <div key={t.id} className={`toast ${t.kind}`}><Icon n={t.kind === 'warn' ? 'TriangleAlert' : 'CircleCheck'} s={15} />{t.msg}</div>)}</div>
     </div>
+    </>
   );
 }
 
@@ -71,7 +75,7 @@ function TopBar() {
   return (
     <header className="top">
       <div className="brand" onClick={() => setMenu(!menu)}>
-        <span className="logo"><Icon n="Zap" s={16} /></span>
+        <img className="logo-img" src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="30" height="30" />
         <b>Forge</b><span className="pro">PRO</span>
         <Icon n="ChevronDown" s={12} />
       </div>
@@ -80,6 +84,9 @@ function TopBar() {
           <button type="button" onClick={() => { setMenu(false); if (confirm('Start a new empty project? (Your component library is kept.)')) S().newProject(); }}><Icon n="FilePlus" s={14} />New project</button>
           <button type="button" onClick={() => { setMenu(false); fileRef.current.click(); }}><Icon n="FolderOpen" s={14} />Open project…<kbd>Ctrl O</kbd></button>
           <button type="button" onClick={() => { setMenu(false); save(); }}><Icon n="Save" s={14} />Save project<kbd>Ctrl S</kbd></button>
+          <div className="msep" />
+          <button type="button" onClick={() => { const v = getPrefs().ui === 'glass' ? 'classic' : 'glass'; setPref('ui', v); setMenu(false); S().toast(v === 'glass' ? 'Interface: Liquid Glass' : 'Interface: Classic dark'); }}><Icon n="Droplets" s={14} />{getPrefs().ui === 'glass' ? 'Switch to Classic interface' : 'Switch to Liquid Glass interface'}</button>
+          <button type="button" onClick={() => { const v = getPrefs().motion === 'on' ? 'off' : 'on'; setPref('motion', v); setMenu(false); S().toast(v === 'on' ? 'Liquid motion on' : 'Liquid motion off (saves battery)'); }}><Icon n="Waves" s={14} />{getPrefs().motion === 'on' ? 'Turn liquid motion off' : 'Turn liquid motion on'}</button>
           <div className="msep" />
           <button type="button" onClick={() => { setMenu(false); S().set({ modal: 'shortcuts' }); }}><Icon n="Keyboard" s={14} />Keyboard shortcuts<kbd>?</kbd></button>
           <button type="button" onClick={() => { setMenu(false); S().set({ modal: 'palette' }); }}><Icon n="Command" s={14} />Command palette<kbd>Ctrl K</kbd></button>
@@ -267,6 +274,9 @@ function Palette() {
       ['Group selection', 'Group', () => S().group()],
       ['Ungroup', 'Ungroup', () => S().ungroup()],
       ['Keyboard shortcuts', 'Keyboard', () => S().set({ modal: 'shortcuts' })],
+      ['Interface: Liquid Glass', 'Droplets', () => setPref('ui', 'glass')],
+      ['Interface: Classic dark', 'Moon', () => setPref('ui', 'classic')],
+      ['Toggle liquid motion', 'Waves', () => setPref('motion', getPrefs().motion === 'on' ? 'off' : 'on')],
       ['Download full React project', 'Package', () => S().set({ modal: 'code' })],
       ...Object.keys(THEMES).map((n) => [`Theme: ${n}`, 'Palette', () => S().setTheme(n)]),
       ...S().project.pages.map((p) => [`Go to page: ${p.name}`, 'File', () => S().setPage(p.id)]),

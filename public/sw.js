@@ -1,8 +1,8 @@
 // Forge Studio Pro service worker: the app runs from the device's cache.
 // - App shell (index.html): network-first, so new deploys show up; falls back to cache when offline.
 // - Hashed build assets, fonts, icons: cache-first (they never change), so loads are instant.
-const VERSION = 'forge-pro-v1';
-const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png'];
+const VERSION = 'forge-pro-v2';
+const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './favicon-32.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

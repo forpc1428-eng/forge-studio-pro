@@ -1,0 +1,140 @@
+/* =========================================================================
+   Forge Studio Pro: "Liquid Glass" interface theme
+   Floating frosted panels with real depth, a living liquid backdrop,
+   specular rims and glossy liquid controls. Active when <html data-ui="glass">.
+   ========================================================================= */
+
+.logo-img { width: 30px; height: 30px; border-radius: 9px; display: block; box-shadow: 0 6px 18px -6px #8b6cffcc; }
+
+html[data-ui="glass"] {
+  --bg: #0b0718;
+  --panel: rgba(22, 16, 44, 0.52);
+  --panel2: rgba(255, 255, 255, 0.045);
+  --raised: rgba(255, 255, 255, 0.075);
+  --hover: rgba(255, 255, 255, 0.11);
+  --line: rgba(255, 255, 255, 0.085);
+  --line2: rgba(255, 255, 255, 0.14);
+  --text: #f4f1ff;
+  --mute: #a9a2c9;
+  --dim: #77709a;
+  --acc: #9d7bff;
+  --acc2: #ff5fb0;
+  --acc-soft: rgba(157, 123, 255, 0.2);
+  --glass-blur: blur(26px) saturate(175%);
+  --rim: inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  --depth: 0 30px 60px -24px rgba(5, 0, 20, 0.75), 0 10px 24px -12px rgba(5, 0, 20, 0.5);
+  --r-panel: 20px;
+}
+
+/* ---------- living liquid backdrop (cheap: gradients + transforms only, no filters) ---------- */
+.liquid-bg { display: none; }
+html[data-ui="glass"] body { background: radial-gradient(1200px 800px at 10% -10%, #2a1170 0%, transparent 60%), radial-gradient(1000px 700px at 110% 110%, #4a0f4f 0%, transparent 60%), #0b0718; }
+html[data-ui="glass"] .liquid-bg { display: block; position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+html[data-ui="glass"] .liquid-bg i { position: absolute; width: 46vmax; height: 46vmax; border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; opacity: 0.55; will-change: transform; animation: liquid-drift 38s ease-in-out infinite alternate, liquid-morph 18s ease-in-out infinite alternate; }
+html[data-ui="glass"] .liquid-bg i:nth-child(1) { left: -12vmax; top: -14vmax; background: radial-gradient(circle at 35% 35%, #7b5cff 0%, #5b2fd6 35%, transparent 68%); }
+html[data-ui="glass"] .liquid-bg i:nth-child(2) { right: -14vmax; top: 10vh; background: radial-gradient(circle at 60% 40%, #ff4fa3 0%, #b0248a 38%, transparent 68%); animation-duration: 44s, 22s; animation-delay: -12s, -6s; opacity: 0.42; }
+html[data-ui="glass"] .liquid-bg i:nth-child(3) { left: 20vw; bottom: -22vmax; background: radial-gradient(circle at 50% 50%, #2ad4ff 0%, #2563eb 35%, transparent 68%); animation-duration: 50s, 26s; animation-delay: -20s, -3s; opacity: 0.32; }
+html[data-ui="glass"] .liquid-bg i:nth-child(4) { right: 18vw; bottom: -10vmax; width: 30vmax; height: 30vmax; background: radial-gradient(circle, #a78bfa 0%, transparent 65%); animation-duration: 34s, 16s; animation-delay: -8s, -10s; opacity: 0.3; }
+@keyframes liquid-drift { 0% { transform: translate3d(0, 0, 0) rotate(0deg) scale(1); } 50% { transform: translate3d(6vw, 4vh, 0) rotate(40deg) scale(1.08); } 100% { transform: translate3d(-4vw, 8vh, 0) rotate(-25deg) scale(0.95); } }
+@keyframes liquid-morph { 0% { border-radius: 42% 58% 63% 37% / 41% 44% 56% 59%; } 50% { border-radius: 63% 37% 41% 59% / 58% 36% 64% 42%; } 100% { border-radius: 36% 64% 52% 48% / 46% 61% 39% 54%; } }
+html[data-ui="glass"][data-motion="off"] .liquid-bg i { animation: none; }
+@media (prefers-reduced-motion: reduce) { html[data-ui="glass"] .liquid-bg i { animation: none; } }
+
+/* ---------- floating glass layout with depth ---------- */
+html[data-ui="glass"] .app { position: relative; z-index: 1; padding: 10px; gap: 10px; }
+html[data-ui="glass"] .main { gap: 10px; }
+html[data-ui="glass"] .top,
+html[data-ui="glass"] .panel,
+html[data-ui="glass"] .stage {
+  background: var(--panel);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  box-shadow: var(--rim), var(--depth);
+}
+html[data-ui="glass"] .top { height: 54px; padding: 0 12px; border-radius: 18px; }
+html[data-ui="glass"] .panel.left, html[data-ui="glass"] .panel.right { border-right: 1px solid var(--line); border-left: 1px solid var(--line); overflow: hidden; }
+html[data-ui="glass"] .stage { background-color: rgba(10, 6, 24, 0.42); background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px); background-size: 22px 22px; }
+html[data-ui="glass"] .page { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 50px 120px -30px rgba(0, 0, 0, 0.85), 0 0 80px -20px rgba(157, 123, 255, 0.25); }
+html[data-ui="glass"] .ltabs, html[data-ui="glass"] .rtabs, html[data-ui="glass"] .insp-head, html[data-ui="glass"] .alignbar, html[data-ui="glass"] .sec, html[data-ui="glass"] .code-top, html[data-ui="glass"] .code-bar { border-color: var(--line); }
+html[data-ui="glass"] .insp-head { background: transparent; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+/* tabs as glass pills */
+html[data-ui="glass"] .ltabs button.on, html[data-ui="glass"] .rtabs button.on {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 6px 16px -8px rgba(157, 123, 255, 0.8);
+}
+
+/* ---------- glossy liquid buttons ---------- */
+html[data-ui="glass"] .btn { background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)); border-color: var(--line2); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 4px 12px -6px rgba(0, 0, 0, 0.6); backdrop-filter: blur(10px); }
+html[data-ui="glass"] .btn:hover { background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.07)); }
+html[data-ui="glass"] .btn.ghost { background: transparent; box-shadow: none; border-color: transparent; backdrop-filter: none; }
+html[data-ui="glass"] .btn.ghost:hover { background: var(--hover); }
+html[data-ui="glass"] .btn.primary {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: linear-gradient(120deg, #8b5cff, #c04dff 45%, #ff5fb0 75%, #8b5cff);
+  background-size: 260% 100%;
+  animation: liquid-flow 9s ease-in-out infinite;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45), inset 0 -8px 16px -8px rgba(60, 0, 90, 0.6), 0 10px 28px -10px rgba(190, 80, 255, 0.9);
+}
+html[data-ui="glass"] .btn.primary::before { content: ''; position: absolute; inset: 1px 1px 50% 1px; border-radius: inherit; background: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0)); z-index: -1; pointer-events: none; }
+html[data-ui="glass"] .btn.primary::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%; background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.45), transparent); transform: skewX(-18deg); transition: left 0.7s cubic-bezier(.22, 1, .36, 1); pointer-events: none; }
+html[data-ui="glass"] .btn.primary:hover::after { left: 120%; }
+@keyframes liquid-flow { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+html[data-ui="glass"][data-motion="off"] .btn.primary { animation: none; }
+
+html[data-ui="glass"] .ibtn.on { background: linear-gradient(180deg, rgba(157, 123, 255, 0.4), rgba(157, 123, 255, 0.15)); color: #fff; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -4px rgba(157, 123, 255, 0.8); }
+html[data-ui="glass"] .pro { box-shadow: 0 2px 10px -2px #ff9f43aa, inset 0 1px 0 #fff8; }
+
+/* ---------- inputs: inset glass wells ---------- */
+html[data-ui="glass"] .num, html[data-ui="glass"] .color, html[data-ui="glass"] .tin, html[data-ui="glass"] .select select,
+html[data-ui="glass"] .search, html[data-ui="glass"] .seg, html[data-ui="glass"] .cmdk, html[data-ui="glass"] .fontbtn {
+  background: rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35), inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+}
+html[data-ui="glass"] .seg button.on { background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.07)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 2px 6px rgba(0, 0, 0, 0.4); }
+html[data-ui="glass"] .tgl input:checked + .tgl-t { background: linear-gradient(90deg, #8b5cff, #ff5fb0); box-shadow: 0 0 12px -2px rgba(190, 80, 255, 0.8); }
+html[data-ui="glass"] .tgl-t { background: rgba(255, 255, 255, 0.14); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5); }
+html[data-ui="glass"] input[type=range] { background: linear-gradient(90deg, #8b5cff, #ff5fb0 var(--p, 50%), rgba(255, 255, 255, 0.12) var(--p, 50%)); }
+
+/* ---------- cards with depth + sheen ---------- */
+html[data-ui="glass"] .card, html[data-ui="glass"] .tpl, html[data-ui="glass"] .dev, html[data-ui="glass"] .theme, html[data-ui="glass"] .src, html[data-ui="glass"] .bcard, html[data-ui="glass"] .pgroup, html[data-ui="glass"] .shadow-card, html[data-ui="glass"] .stats div, html[data-ui="glass"] .storage {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025));
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+html[data-ui="glass"] .card { transition: transform 0.35s cubic-bezier(.22, 1, .36, 1), box-shadow 0.35s, border-color 0.2s; }
+html[data-ui="glass"] .card:hover { transform: translateY(-3px) scale(1.015); border-color: rgba(190, 160, 255, 0.45); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 18px 34px -14px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(157, 123, 255, 0.25), 0 10px 30px -12px rgba(157, 123, 255, 0.55); }
+html[data-ui="glass"] .thumb { background: radial-gradient(circle at 50% 0%, rgba(157, 123, 255, 0.16), rgba(0, 0, 0, 0.25)); }
+html[data-ui="glass"] .card-n { border-top-color: rgba(255, 255, 255, 0.06); }
+html[data-ui="glass"] .chips button { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.08); }
+html[data-ui="glass"] .chips button.on { background: linear-gradient(180deg, #ffffff, #e5dcff); color: #1a0d3d; box-shadow: 0 4px 14px -4px rgba(157, 123, 255, 0.9); }
+html[data-ui="glass"] .lrow.sel, html[data-ui="glass"] .catrow.sel, html[data-ui="glass"] .prow.sel { background: linear-gradient(90deg, rgba(157, 123, 255, 0.28), rgba(157, 123, 255, 0.06)); box-shadow: inset 2px 0 0 var(--acc); }
+
+/* ---------- floating glass overlays ---------- */
+html[data-ui="glass"] .ctool, html[data-ui="glass"] .menu, html[data-ui="glass"] .filemenu, html[data-ui="glass"] .cpop, html[data-ui="glass"] .fontlist, html[data-ui="glass"] .toast, html[data-ui="glass"] .palette, html[data-ui="glass"] .modal {
+  background: rgba(26, 18, 52, 0.66);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 40px 90px -20px rgba(3, 0, 15, 0.85);
+}
+html[data-ui="glass"] .ctool { border-radius: 18px; padding: 6px; }
+html[data-ui="glass"] .ctool .ibtn.on { background: linear-gradient(135deg, #8b5cff, #ff5fb0); }
+html[data-ui="glass"] .modal { border-radius: 24px; }
+html[data-ui="glass"] .modal-bg { background: rgba(5, 2, 15, 0.45); backdrop-filter: blur(10px); }
+html[data-ui="glass"] .mi:hover:not(:disabled), html[data-ui="glass"] .pal-list button.on { background: linear-gradient(90deg, #8b5cff, #c04dff); }
+html[data-ui="glass"] .langs button.on, html[data-ui="glass"] .fx-grid button.on { background: linear-gradient(135deg, #8b5cff, #ff5fb0); border-color: transparent; box-shadow: 0 4px 14px -6px rgba(190, 80, 255, 0.9); }
+html[data-ui="glass"] .codebox, html[data-ui="glass"] .gutter, html[data-ui="glass"] .jsonedit { background: rgba(6, 3, 16, 0.6); }
+html[data-ui="glass"] .preview { background: rgba(6, 3, 16, 0.75); backdrop-filter: blur(24px); }
+html[data-ui="glass"] .pv-top { background: rgba(22, 16, 44, 0.6); border-color: var(--line); }
+
+/* selection chrome glows */
+html[data-ui="glass"] .selbox { outline-color: #b69bff; box-shadow: 0 0 0 1px rgba(182, 155, 255, 0.25), 0 0 18px -2px rgba(157, 123, 255, 0.55); }
+html[data-ui="glass"] .hd { border-color: #b69bff; box-shadow: 0 0 8px rgba(157, 123, 255, 0.8); }
+html[data-ui="glass"] .size-tag { background: linear-gradient(135deg, #8b5cff, #ff5fb0); }
+
+@media (max-width: 1100px) { html[data-ui="glass"] .app { padding: 6px; gap: 6px; } html[data-ui="glass"] .main { gap: 6px; } }

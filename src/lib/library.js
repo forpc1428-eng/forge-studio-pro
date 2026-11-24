@@ -65,6 +65,7 @@ function stars(n = 5, color = '#fbbf24') {
 export const CATEGORIES = [
   { id: 'basic', label: 'Basics', icon: 'Shapes' },
   { id: 'type', label: 'Typography', icon: 'Type' },
+  { id: 'glass', label: 'Liquid Glass', icon: 'Droplets' },
   { id: 'buttons', label: 'Buttons', icon: 'MousePointerClick' },
   { id: 'forms', label: 'Forms & Inputs', icon: 'TextCursorInput' },
   { id: 'cards', label: 'Cards', icon: 'CreditCard' },
@@ -268,6 +269,62 @@ add('decor', 'Conic ring', (t) => F({ name: 'Conic ring', w: 300, h: 300, radius
 add('decor', 'Stripes', (t) => createNode('code', { name: 'Stripes', w: 600, h: 300, html: '<div class="s"></div>', css: `.s{width:100%;height:100%;background:repeating-linear-gradient(45deg,${t.accent}22 0 12px,transparent 12px 24px);border-radius:24px}` }));
 add('decor', 'Marquee', (t) => createNode('code', { name: 'Marquee', w: 1000, h: 60, html: '<div class="m"><span>DESIGN ✦ CODE ✦ SHIP ✦ 3D ✦ MOTION ✦ DESIGN ✦ CODE ✦ SHIP ✦ 3D ✦ MOTION ✦</span></div>', css: `.m{overflow:hidden;white-space:nowrap;height:100%;display:flex;align-items:center}.m span{display:inline-block;font:800 32px Inter;color:${t.text};animation:mq 14s linear infinite}@keyframes mq{to{transform:translateX(-50%)}}` }));
 add('decor', 'Typewriter', (t) => createNode('code', { name: 'Typewriter', w: 520, h: 60, html: '<div class="tw">Hello, Forge.</div>', css: `.tw{font:700 40px 'JetBrains Mono',monospace;color:${t.text};width:13ch;white-space:nowrap;overflow:hidden;border-right:3px solid ${t.accent};animation:ty 2.5s steps(13) infinite alternate,bl .7s step-end infinite}@keyframes ty{from{width:0}}@keyframes bl{50%{border-color:transparent}}` }));
+
+// LIQUID GLASS — frosted layers with real depth: backdrop blur, specular rim, inner glow, layered shadow
+const glassSkin = (o = {}) => ({
+  fill: solid(o.tint || '#ffffff14'), backdrop: o.blur ?? 28, radius: o.radius ?? 28,
+  border: { w: 1, color: '#ffffff33', style: 'solid' },
+  shadows: [
+    { x: 0, y: 1, blur: 0, spread: 0, color: '#ffffff59', inset: true },
+    { x: 0, y: -1, blur: 0, spread: 0, color: '#00000040', inset: true },
+    { x: 0, y: 0, blur: 24, spread: 0, color: '#ffffff12', inset: true },
+    { x: 0, y: 24, blur: 48, spread: -16, color: '#0a001fb3', inset: false },
+    { x: 0, y: 8, blur: 16, spread: -8, color: '#0a001f80', inset: false },
+  ],
+});
+const liquidBackdrop = (t, w = 900, h = 560) => createNode('code', {
+  name: 'Liquid backdrop', w, h,
+  html: '<div class="lq"><i></i><i></i><i></i></div>',
+  css: `.lq{position:relative;width:100%;height:100%;overflow:hidden;background:#0b0718;border-radius:28px}.lq i{position:absolute;width:62%;aspect-ratio:1;border-radius:42% 58% 63% 37%/41% 44% 56% 59%;filter:blur(30px);opacity:.85;animation:d 16s ease-in-out infinite alternate,m 9s ease-in-out infinite alternate}.lq i:nth-child(1){left:-10%;top:-20%;background:${t.accent}}.lq i:nth-child(2){right:-12%;top:10%;background:${t.accent2};animation-delay:-5s,-3s}.lq i:nth-child(3){left:25%;bottom:-35%;background:#22d3ee;animation-delay:-9s,-6s;opacity:.6}@keyframes d{to{transform:translate(12%,10%) rotate(60deg) scale(1.1)}}@keyframes m{50%{border-radius:63% 37% 41% 59%/58% 36% 64% 42%}to{border-radius:36% 64% 52% 48%/46% 61% 39% 54%}}`,
+});
+add('glass', 'Liquid backdrop (animated)', (t) => liquidBackdrop(t));
+add('glass', 'Liquid glass card', () => col({ name: 'Liquid glass card', w: 340, sizeW: 'fixed', ...glassSkin(), layout: { gap: 12, pad: pad(28) } }, [
+  row({ w: 48, h: 48, sizeW: 'fixed', sizeH: 'fixed', ...glassSkin({ radius: 16, tint: '#ffffff1f', blur: 12 }), layout: { justify: 'center' } }, [I('Sparkles', { w: 22, h: 22, color: '#ffffff' })]),
+  T('Liquid Glass', { fs: 24, fw: 700, color: '#ffffff', sizeW: 'hug' }),
+  T('Frosted layers, specular edges and real depth.', { fs: 15, lh: 1.5, color: '#ffffffb3', ...fillW }),
+]));
+add('glass', 'Glass button', () => row({ name: 'Glass button', ...glassSkin({ radius: 999, tint: '#ffffff1f', blur: 20 }), layout: { gap: 8, pad: pad(14, 26), justify: 'center' }, anim: { hover: 'lift' }, cursor: 'pointer' }, [T('Continue', { fs: 16, fw: 600, color: '#ffffff', sizeW: 'hug' }), I('ArrowRight', { w: 18, h: 18, color: '#ffffff' })]));
+add('glass', 'Liquid gradient button', (t) => row({ name: 'Liquid button', radius: 999, fill: lin(t.accent, t.accent2, 120, '#22d3ee'), border: { w: 1, color: '#ffffff59', style: 'solid' }, shadows: [{ x: 0, y: 1, blur: 0, spread: 0, color: '#ffffff99', inset: true }, { x: 0, y: -10, blur: 18, spread: -8, color: '#3b007066', inset: true }, { x: 0, y: 14, blur: 30, spread: -10, color: t.accent + 'cc', inset: false }], layout: { gap: 8, pad: pad(15, 28), justify: 'center' }, anim: { hover: 'shine', loop: 'gradient', loopDur: 7000 }, cursor: 'pointer' }, [I('Droplets', { w: 18, h: 18, color: '#ffffff' }), T('Get started', { fs: 16, fw: 700, color: '#ffffff', sizeW: 'hug' })]));
+add('glass', 'Glass icon buttons', () => row({ name: 'Glass icon row', layout: { gap: 12 } }, ['Heart', 'Share2', 'Bookmark', 'Ellipsis'].map((ic) => row({ w: 52, h: 52, sizeW: 'fixed', sizeH: 'fixed', ...glassSkin({ radius: 18, tint: '#ffffff1a', blur: 18 }), layout: { justify: 'center' }, anim: { hover: 'grow' } }, [I(ic, { w: 22, h: 22, color: '#ffffff' })]))));
+add('glass', 'Floating glass tab bar', (t) => row({ name: 'Glass tab bar', w: 360, sizeW: 'fixed', ...glassSkin({ radius: 999, tint: '#ffffff1a' }), layout: { pad: pad(10, 14), justify: 'between' } }, [['House', true], ['Search'], ['Plus'], ['Bell'], ['User']].map(([ic, on]) => row({ w: 52, h: 44, sizeW: 'fixed', sizeH: 'fixed', radius: 999, fill: on ? lin(t.accent, t.accent2, 135) : none, shadows: on ? [{ x: 0, y: 6, blur: 16, spread: -6, color: t.accent + 'cc', inset: false }, { x: 0, y: 1, blur: 0, spread: 0, color: '#ffffff80', inset: true }] : [], layout: { justify: 'center' } }, [I(ic, { w: 22, h: 22, color: on ? '#ffffff' : '#ffffffb3' })]))));
+add('glass', 'Glass stat widget', (t) => col({ name: 'Glass stat', w: 260, sizeW: 'fixed', ...glassSkin(), layout: { gap: 8, pad: pad(22) } }, [
+  row({ ...fillW, layout: { justify: 'between' } }, [T('Balance', { fs: 14, color: '#ffffffb3', sizeW: 'hug' }), row({ ...glassSkin({ radius: 999, tint: '#22c55e33', blur: 8 }), layout: { pad: pad(3, 9) } }, [T('+8.2%', { fs: 12, fw: 700, color: '#86efac', sizeW: 'hug' })])]),
+  T('$48,920', { fs: 34, fw: 800, color: '#ffffff', sizeW: 'hug' }),
+  createNode('chart', { kind: 'area', sizeW: 'fill', h: 70, color: '#ffffff', color2: t.accent2, grid: false }),
+]));
+add('glass', 'Glass profile card', () => col({ name: 'Glass profile', w: 300, sizeW: 'fixed', ...glassSkin({ radius: 32 }), layout: { gap: 10, pad: pad(28), align: 'center' } }, [
+  img(avatarImg(32), { w: 88, h: 88, radius: 999, border: { w: 3, color: '#ffffff66', style: 'solid' } }),
+  T('Maya Chen', { fs: 20, fw: 700, color: '#ffffff', sizeW: 'hug' }),
+  T('Product designer', { fs: 14, color: '#ffffffb3', sizeW: 'hug' }),
+  row({ ...fillW, ...glassSkin({ radius: 999, tint: '#ffffff26', blur: 14 }), layout: { pad: pad(12), justify: 'center' }, cursor: 'pointer', anim: { hover: 'lift' } }, [T('Follow', { fs: 15, fw: 700, color: '#ffffff', sizeW: 'hug' })]),
+]));
+add('glass', 'Glass toggle settings', (t) => col({ name: 'Glass settings', w: 320, sizeW: 'fixed', ...glassSkin(), layout: { gap: 0, pad: pad(8, 18) } }, [['Wifi', 'Wi-Fi', true], ['Bluetooth', 'Bluetooth', true], ['Moon', 'Focus', false]].map(([ic, l, on]) => row({ ...fillW, layout: { gap: 12, pad: pad(12, 0) } }, [I(ic, { w: 20, h: 20, color: '#ffffff' }), T(l, { fs: 15, color: '#ffffff', sizeW: 'fill' }), createNode('toggle', { color: t.accent, offColor: '#ffffff33', checked: on })]))));
+add('glass', 'Layered depth stack', () => F({ name: 'Depth stack', w: 340, h: 260, fill: none }, [
+  F({ name: 'Back layer', x: 40, y: 0, w: 260, h: 170, ...glassSkin({ tint: '#ffffff0d', radius: 26 }), opacity: 0.6 }),
+  F({ name: 'Middle layer', x: 20, y: 30, w: 300, h: 180, ...glassSkin({ tint: '#ffffff12', radius: 26 }), opacity: 0.8 }),
+  col({ name: 'Front layer', x: 0, y: 64, w: 340, sizeW: 'fixed', ...glassSkin({ tint: '#ffffff1f' }), layout: { gap: 6, pad: pad(22) } }, [T('Depth', { fs: 22, fw: 700, color: '#ffffff', sizeW: 'hug' }), T('Three frosted layers floating over each other.', { fs: 14, color: '#ffffffb3', ...fillW })]),
+]));
+add('glass', 'Glass hero (with backdrop)', (t) => F({ name: 'Glass hero', w: 900, h: 560, fill: none, clip: true, radius: 28 }, [
+  { ...liquidBackdrop(t), x: 0, y: 0 },
+  col({ name: 'Hero glass', x: 170, y: 150, w: 560, sizeW: 'fixed', ...glassSkin({ radius: 36 }), layout: { gap: 16, pad: pad(40), align: 'center' } }, [
+    T('Liquid Glass', { fs: 52, fw: 800, ls: -1.5, color: '#ffffff', sizeW: 'hug' }),
+    T('Interfaces that feel like light through water.', { fs: 17, color: '#ffffffcc', sizeW: 'hug' }),
+    row({ layout: { gap: 12 } }, [
+      row({ radius: 999, fill: solid('#ffffff'), layout: { pad: pad(13, 24) }, anim: { hover: 'lift' } }, [T('Get started', { fs: 15, fw: 700, color: '#140c33', sizeW: 'hug' })]),
+      row({ ...glassSkin({ radius: 999, tint: '#ffffff1f', blur: 16 }), layout: { pad: pad(13, 24) }, anim: { hover: 'lift' } }, [T('Learn more', { fs: 15, fw: 600, color: '#ffffff', sizeW: 'hug' })]),
+    ]),
+  ]),
+]));
 
 export const LIBRARY = L;
 

@@ -14,6 +14,16 @@ npm run build      # static build in dist/
 
 Requires Node.js 18+. Your work auto-saves in the browser. Use **Forge menu → Save project** for a file copy.
 
+## Run it offline
+
+There are three ways. All of them work with no internet.
+
+1. **Installed app (recommended).** Open the live site once in Chrome or Edge, then click the **Install** icon in the address bar (or ⋮ → *Cast, save and share* → *Install page as app*). Forge Pro gets its own window, Start-menu entry and taskbar icon, and opens offline from then on.
+2. **From this folder.** Double-click **`Start Forge Pro.bat`**. It runs a local server on your PC at http://localhost:5199. It needs internet only for the very first `npm install`.
+3. **Offline build.** `npm run build` then `npx vite preview`. This serves the optimised `dist/` folder locally.
+
+Offline caveats: Google Fonts other than the ones already cached, stock photos (picsum/pravatar URLs), and the Android/desktop compilers' first-time downloads need internet. Your own uploaded images and everything else work offline.
+
 ## Live site & redeploying
 
 Live at **https://forpc1428-eng.github.io/forge-studio-pro/**, served from the `gh-pages` branch.
@@ -33,7 +43,8 @@ GitHub only hosts the files. All editing, 3D rendering, code generation and app 
 
 | Area | What you get |
 |---|---|
-| **Library** | 170+ ready components in 12 categories (Basics, Typography, Buttons, Forms, Cards, Navigation, Data & Charts, Feedback, Sections, Mobile, 3D, Backgrounds), plus 5 full page templates. Live thumbnails, search, and drag-and-drop or click to insert. |
+| **Interface** | **Liquid Glass** theme (default): floating frosted panels with depth, a slow-moving liquid backdrop and glossy liquid buttons. Switch to *Classic dark* or turn the motion off in the **Forge menu** or with Ctrl+K. |
+| **Library** | 180+ ready components in 13 categories (Basics, Typography, **Liquid Glass**, Buttons, Forms, Cards, Navigation, Data & Charts, Feedback, Sections, Mobile, 3D, Backgrounds), plus 5 full page templates. Live thumbnails, search, and drag-and-drop or click to insert. |
 | **My components** | Save any selection as your own component (Ctrl+Alt+K). Create, rename and delete categories, add favourites, move components between categories, update a component from the selection, and export/import the library as a file. |
 | **Icons** | Every Lucide icon (1,500+), searchable, with adjustable stroke. Click to insert or to swap the selected icon. |
 | **Canvas** | Infinite zoom and pan, smart snapping guides, resize/rotate handles, marquee select, deep select (Ctrl-click), double-click to drill in or edit text, auto-layout reordering by drag, a drawing tools bar, and drag-in images and videos. |
@@ -43,7 +54,7 @@ GitHub only hosts the files. All editing, 3D rendering, code generation and app 
 | **3D objects** | Three.js / React Three Fiber scenes: 19 shapes, 10 materials (glass, chrome, liquid distort, wobble, neon, holo…), lighting, float, auto-rotate. |
 | **Interactions** | Go to page, back, open link, scroll, message. Live **Preview** (P) with a phone frame. |
 | **Code** | React, React + Tailwind, HTML, CSS, Vue, React Native, Three.js (R3F) and JSON, for the selection or the whole page. Copy, download, or get a **full Vite React project** as a zip. |
-| **Themes** | 10 one-click themes that recolour every layer. |
+| **Themes** | 11 one-click design themes (including *Liquid Glass*) that recolour every layer. |
 | **Command palette** | Ctrl+K: every action, component and page. Press **?** for all shortcuts. |
 
 ## Publish Center (one click)
