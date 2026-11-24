@@ -13,6 +13,8 @@ import { DEVICES, THEMES } from './lib/constants.js';
 import { walk } from './lib/nodes.js';
 import { downloadBlob } from './lib/zip.js';
 import { getPrefs, setPref } from './lib/uiPrefs.js';
+import AppBackground from './components/AppBackground.jsx';
+import InterfaceSettings from './components/InterfaceSettings.jsx';
 
 export default function App() {
   const modal = useStore((s) => s.modal);
@@ -29,7 +31,7 @@ export default function App() {
 
   return (
     <>
-    <div className="liquid-bg" aria-hidden="true"><i /><i /><i /><i /></div>
+    <AppBackground />
     <div className="app">
       <TopBar />
       <main className="main">
@@ -44,6 +46,7 @@ export default function App() {
       {modal === 'json' && <JsonModal />}
       {modal === 'shortcuts' && <Shortcuts />}
       {modal === 'palette' && <Palette />}
+      {modal === 'uiSettings' && <InterfaceSettings onClose={() => set({ modal: null })} />}
       <div className="toasts">{toasts.map((t) => <div key={t.id} className={`toast ${t.kind}`}><Icon n={t.kind === 'warn' ? 'TriangleAlert' : 'CircleCheck'} s={15} />{t.msg}</div>)}</div>
     </div>
     </>
@@ -85,6 +88,7 @@ function TopBar() {
           <button type="button" onClick={() => { setMenu(false); fileRef.current.click(); }}><Icon n="FolderOpen" s={14} />Open project…<kbd>Ctrl O</kbd></button>
           <button type="button" onClick={() => { setMenu(false); save(); }}><Icon n="Save" s={14} />Save project<kbd>Ctrl S</kbd></button>
           <div className="msep" />
+          <button type="button" onClick={() => { setMenu(false); S().set({ modal: 'uiSettings' }); }}><Icon n="Palette" s={14} />Interface settings (background, glass)…</button>
           <button type="button" onClick={() => { const v = getPrefs().ui === 'glass' ? 'classic' : 'glass'; setPref('ui', v); setMenu(false); S().toast(v === 'glass' ? 'Interface: Liquid Glass' : 'Interface: Classic dark'); }}><Icon n="Droplets" s={14} />{getPrefs().ui === 'glass' ? 'Switch to Classic interface' : 'Switch to Liquid Glass interface'}</button>
           <button type="button" onClick={() => { const v = getPrefs().motion === 'on' ? 'off' : 'on'; setPref('motion', v); setMenu(false); S().toast(v === 'on' ? 'Liquid motion on' : 'Liquid motion off (saves battery)'); }}><Icon n="Waves" s={14} />{getPrefs().motion === 'on' ? 'Turn liquid motion off' : 'Turn liquid motion on'}</button>
           <div className="msep" />
@@ -105,6 +109,7 @@ function TopBar() {
       <button type="button" className="cmdk" onClick={() => S().set({ modal: 'palette' })}><Icon n="Search" s={13} /> Search actions, components… <kbd>Ctrl K</kbd></button>
       <div className="grow" />
       <Select className="themesel" value={project.theme.name} onChange={(v) => S().setTheme(v)} options={Object.keys(THEMES).map((t) => [t, `Theme: ${t}`])} />
+      <IconBtn icon="Settings2" title="Interface settings: background, glass, colours" onClick={() => S().set({ modal: S().modal === 'uiSettings' ? null : 'uiSettings' })} />
       <button type="button" className="btn ghost" onClick={() => S().set({ modal: 'code' })} title="Code (Ctrl+E)"><Icon n="Code" s={15} /> Code</button>
       <button type="button" className="btn ghost" onClick={() => S().set({ preview: true })} title="Preview (P)"><Icon n="Play" s={15} /> Preview</button>
       <button type="button" className="btn primary" onClick={() => S().set({ modal: 'publish' })}><Icon n="Rocket" s={15} /> Publish</button>
@@ -274,6 +279,7 @@ function Palette() {
       ['Group selection', 'Group', () => S().group()],
       ['Ungroup', 'Ungroup', () => S().ungroup()],
       ['Keyboard shortcuts', 'Keyboard', () => S().set({ modal: 'shortcuts' })],
+      ['Interface settings: background, glass, colours', 'Settings2', () => S().set({ modal: 'uiSettings' })],
       ['Interface: Liquid Glass', 'Droplets', () => setPref('ui', 'glass')],
       ['Interface: Classic dark', 'Moon', () => setPref('ui', 'classic')],
       ['Toggle liquid motion', 'Waves', () => setPref('motion', getPrefs().motion === 'on' ? 'off' : 'on')],

@@ -13,6 +13,6 @@ applyPrefs(); // Liquid Glass (default) or Classic, before first paint
 ready.finally(() => createRoot(document.getElementById('root')).render(<App />));
 
 // Offline + instant reloads: cache the app on the device (production builds only).
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 }
