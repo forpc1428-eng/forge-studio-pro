@@ -1,0 +1,72 @@
+/* Forge motion kit — shipped verbatim with exported code */
+[class*="fx-in-"]{animation-duration:var(--fx-dur,600ms);animation-delay:var(--fx-delay,0ms);animation-timing-function:var(--fx-ease,cubic-bezier(.22,1,.36,1));animation-fill-mode:both}
+.fx-in-fade{animation-name:fx-fade}
+.fx-in-up{animation-name:fx-up}
+.fx-in-down{animation-name:fx-down}
+.fx-in-left{animation-name:fx-left}
+.fx-in-right{animation-name:fx-right}
+.fx-in-zoom{animation-name:fx-zoom}
+.fx-in-zoomOut{animation-name:fx-zoomOut}
+.fx-in-pop{animation-name:fx-pop}
+.fx-in-blur{animation-name:fx-blur}
+.fx-in-flip{animation-name:fx-flip}
+.fx-in-rotate{animation-name:fx-rotate}
+.fx-in-swing{animation-name:fx-swing;transform-origin:top center}
+.fx-in-drop{animation-name:fx-drop}
+.fx-in-skew{animation-name:fx-skew}
+.fx-in-reveal{animation-name:fx-reveal}
+@keyframes fx-fade{from{opacity:0}}
+@keyframes fx-up{from{opacity:0;translate:0 28px}}
+@keyframes fx-down{from{opacity:0;translate:0 -28px}}
+@keyframes fx-left{from{opacity:0;translate:36px 0}}
+@keyframes fx-right{from{opacity:0;translate:-36px 0}}
+@keyframes fx-zoom{from{opacity:0;scale:.85}}
+@keyframes fx-zoomOut{from{opacity:0;scale:1.15}}
+@keyframes fx-pop{0%{opacity:0;scale:.5}60%{opacity:1;scale:1.08}80%{scale:.97}100%{scale:1}}
+@keyframes fx-blur{from{opacity:0;filter:blur(14px)}}
+@keyframes fx-flip{from{opacity:0;transform:perspective(600px) rotateX(-80deg)}}
+@keyframes fx-rotate{from{opacity:0;rotate:-14deg;scale:.9}}
+@keyframes fx-swing{0%{opacity:0;transform:rotate(-30deg)}50%{transform:rotate(12deg)}75%{transform:rotate(-5deg)}100%{opacity:1;transform:rotate(0)}}
+@keyframes fx-drop{0%{opacity:0;translate:0 -80px}60%{opacity:1;translate:0 8px}80%{translate:0 -3px}100%{translate:0 0}}
+@keyframes fx-skew{from{opacity:0;transform:skewY(8deg);translate:0 24px}}
+@keyframes fx-reveal{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+
+[class*="fx-h-"]{transition:translate .35s cubic-bezier(.22,1,.36,1),scale .35s cubic-bezier(.22,1,.36,1),rotate .35s cubic-bezier(.22,1,.36,1),box-shadow .35s,filter .35s,outline-color .35s}
+.fx-h-lift:hover{translate:0 -6px;box-shadow:0 18px 40px -12px rgba(0,0,0,.5)}
+.fx-h-grow:hover{scale:1.06}
+.fx-h-shrink:hover{scale:.95}
+.fx-h-glow:hover{box-shadow:0 0 0 1px rgba(255,255,255,.15),0 0 32px rgba(124,92,255,.65)}
+.fx-h-tilt:hover{rotate:-2.5deg;scale:1.03}
+.fx-h-brighten:hover{filter:brightness(1.18) saturate(1.1)}
+.fx-h-rotate:hover{rotate:8deg}
+.fx-h-shine{position:relative;overflow:hidden}
+.fx-h-shine::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);translate:-120% 0;transition:translate .7s;pointer-events:none}
+.fx-h-shine:hover::after{translate:120% 0}
+.fx-h-border{outline:2px solid transparent;outline-offset:3px}
+.fx-h-border:hover{outline-color:currentColor}
+.fx-h-float:hover{translate:0 -4px}
+.fx-h-press:active{scale:.94}
+
+[class*="fx-l-"]{animation-duration:var(--fx-loop,3s);animation-iteration-count:infinite}
+.fx-l-float{animation-name:fx-float;animation-timing-function:ease-in-out}
+.fx-l-pulse{animation-name:fx-pulse;animation-timing-function:ease-in-out}
+.fx-l-spin{animation-name:fx-spin;animation-timing-function:linear}
+.fx-l-bounce{animation-name:fx-bounce}
+.fx-l-wiggle{animation-name:fx-wiggle;animation-timing-function:ease-in-out}
+.fx-l-breathe{animation-name:fx-breathe;animation-timing-function:ease-in-out}
+.fx-l-shimmer{animation-name:fx-shimmer;animation-timing-function:linear;background-size:200% 100%!important}
+.fx-l-heartbeat{animation-name:fx-heart}
+.fx-l-orbit{animation-name:fx-orbit;animation-timing-function:linear}
+.fx-l-gradient{animation-name:fx-grad;animation-timing-function:ease-in-out;background-size:300% 300%!important}
+.fx-l-blink{animation-name:fx-blink;animation-timing-function:steps(1)}
+@keyframes fx-float{50%{translate:0 -12px}}
+@keyframes fx-pulse{50%{opacity:.55}}
+@keyframes fx-spin{to{rotate:360deg}}
+@keyframes fx-bounce{0%,100%{translate:0 0;animation-timing-function:cubic-bezier(.8,0,1,1)}50%{translate:0 -18px;animation-timing-function:cubic-bezier(0,0,.2,1)}}
+@keyframes fx-wiggle{0%,100%{rotate:0deg}25%{rotate:-6deg}75%{rotate:6deg}}
+@keyframes fx-breathe{50%{scale:1.06}}
+@keyframes fx-shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@keyframes fx-heart{0%,40%,100%{scale:1}10%,30%{scale:1.12}20%{scale:1}}
+@keyframes fx-orbit{from{transform:rotate(0) translateX(10px) rotate(0)}to{transform:rotate(360deg) translateX(10px) rotate(-360deg)}}
+@keyframes fx-grad{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes fx-blink{50%{opacity:0}}
