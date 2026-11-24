@@ -19,6 +19,7 @@ if (-not (Test-Path node_modules)) {
     if ($LASTEXITCODE -ne 0) { throw 'npm install failed. Check your internet connection.' }
 }
 
+if (Test-Path dist) { Get-ChildItem dist -Filter *.exe | Remove-Item -Force -ErrorAction SilentlyContinue }  # keep only the newest version
 Write-Host 'Packaging Windows installer and portable .exe...' -ForegroundColor Cyan
 npm run dist
 if ($LASTEXITCODE -ne 0) { throw 'Packaging failed.' }

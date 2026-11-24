@@ -9,11 +9,11 @@ import { IconBtn, Icon, Menu, TextIn } from '../ui/controls.jsx';
 import { fillCSS } from '../lib/style.js';
 
 const TABS = [
-  ['library', 'LayoutGrid', 'Library'],
+  ['library', 'CirclePlus', 'Add'],
   ['layers', 'Layers', 'Layers'],
   ['pages', 'Files', 'Pages'],
   ['icons', 'Smile', 'Icons'],
-  ['mine', 'Component', 'My components'],
+  ['mine', 'Bookmark', 'Saved'],
 ];
 
 export default function LeftPanel() {
@@ -87,38 +87,69 @@ function Library() {
   const items = useMemo(() => LIBRARY.map((it) => ({ ...it, node: (() => { const m = it.make(t); return Array.isArray(m) ? m[0] : m; })() })), [t]);
   const ql = q.trim().toLowerCase();
   const filtered = items.filter((it) => (cat === 'all' || it.cat === cat) && (!ql || it.name.toLowerCase().includes(ql) || it.cat.includes(ql)));
-  const groups = cat === 'all' && !ql ? CATEGORIES.filter((c) => c.id !== 'templates') : null;
+  const current = CATEGORIES.find((c) => c.id === cat);
 
-  const useItem = (it) => insert(it.make(t));
+  const useItem = (it) => { insert(it.make(t)); useStore.getState().toast(`Added “${it.name}” — drag it where you want`); };
 
   return (
     <div className="lib">
       <div className="search">
         <Icon n="Search" s={14} />
-        <input placeholder={`Search ${LIBRARY.length}+ components…`} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
+        <input placeholder={`Search ${LIBRARY.length}+ ready-made parts…`} value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.stopPropagation()} />
         {q && <IconBtn icon="X" size={12} onClick={() => setQ('')} />}
       </div>
-      <div className="chips">
-        <button type="button" className={cat === 'all' ? 'on' : ''} onClick={() => setCat('all')}>All</button>
-        {CATEGORIES.map((c) => (
-          <button type="button" key={c.id} className={cat === c.id ? 'on' : ''} onClick={() => setCat(c.id)}><Icon n={c.icon} s={12} />{c.label}</button>
-        ))}
-      </div>
-      {cat === 'templates' ? <TemplateList onUse={(tpl) => { addPage({ name: tpl.name, w: tpl.w, h: tpl.h, device: tpl.device, fill: { type: 'solid', color: t.bg }, nodes: tpl.make(t) }); useStore.getState().toast(`Added page “${tpl.name}”`); }} />
-        : groups ? groups.map((g) => {
-          const list = filtered.filter((x) => x.cat === g.id);
-          return (
-            <div key={g.id} className="lgroup">
-              <div className="lgroup-h"><Icon n={g.icon} s={13} /> {g.label} <span>{list.length}</span><div className="grow" /><button type="button" className="link" onClick={() => setCat(g.id)}>See all</button></div>
-              <div className="cards">{list.slice(0, 6).map((it) => <LibCard key={it.id} it={it} onUse={useItem} />)}</div>
+
+      {/* Step 1: pick a category (light: no previews drawn yet) */}
+      {cat === 'all' && !ql && (
+        <>
+          <div className="lib-hint"><Icon n="MousePointerClick" s={13} /> Pick a category, then <b>click</b> a part to add it or <b>drag</b> it onto the page.</div>
+          <div className="cat-tiles">
+            {CATEGORIES.map((c) => (
+              <button type="button" key={c.id} className="cat-tile" onClick={() => setCat(c.id)}>
+                <span className="cat-ic"><Icon n={c.icon} s={18} /></span>
+                <b>{c.label}</b>
+                <small>{CAT_HELP[c.id] || ''}</small>
+                <em>{c.id === 'templates' ? TEMPLATES.length : items.filter((x) => x.cat === c.id).length}</em>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Step 2: the parts in one category, or search results */}
+      {(cat !== 'all' || ql) && (
+        <>
+          {!ql && (
+            <div className="lib-head">
+              <button type="button" className="btn sm ghost" onClick={() => setCat('all')}><Icon n="ArrowLeft" s={14} /> All categories</button>
+              <b><Icon n={current?.icon} s={14} /> {current?.label}</b>
             </div>
-          );
-        }) : (
-          <div className="cards">{filtered.map((it) => <LibCard key={it.id} it={it} onUse={useItem} />)}{!filtered.length && <div className="empty">No components match “{q}”.</div>}</div>
-        )}
+          )}
+          {cat === 'templates' && !ql
+            ? <TemplateList onUse={(tpl) => { addPage({ name: tpl.name, w: tpl.w, h: tpl.h, device: tpl.device, fill: { type: 'solid', color: t.bg }, nodes: tpl.make(t) }); useStore.getState().toast(`Added page “${tpl.name}”`); }} />
+            : <div className="cards">{filtered.map((it) => <LibCard key={it.id} it={it} onUse={useItem} />)}{!filtered.length && <div className="empty">Nothing matches “{q}”. Try “button”, “card” or “login”.</div>}</div>}
+        </>
+      )}
     </div>
   );
 }
+
+const CAT_HELP = {
+  basic: 'Boxes, shapes, text, images',
+  type: 'Headings and text styles',
+  glass: 'Frosted, premium glass UI',
+  buttons: 'Clickable buttons',
+  forms: 'Inputs, login, sign-up',
+  cards: 'Profile, product, pricing',
+  nav: 'Menus, tabs, bars',
+  data: 'Charts, tables, stats',
+  feedback: 'Alerts, pop-ups, loaders',
+  sections: 'Big website blocks',
+  mobile: 'Phone app screens parts',
+  threed: 'Moving 3D objects',
+  decor: 'Backgrounds and effects',
+  templates: 'Whole ready pages',
+};
 
 function LibCard({ it, onUse }) {
   return (

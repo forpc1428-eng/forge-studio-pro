@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { usePrefs, setPref, setBg, applyPreset, resetPrefs, BG_MODES, BG_PRESETS } from '../lib/uiPrefs.js';
+import { usePrefs, setPref, setBg, setQuality, applyPreset, resetPrefs, BG_MODES, BG_PRESETS } from '../lib/uiPrefs.js';
 import { BackgroundLayers } from './AppBackground.jsx';
 import { Icon, IconBtn, Seg, ColorField, Toggle } from '../ui/controls.jsx';
 
@@ -44,6 +44,9 @@ export default function InterfaceSettings({ onClose }) {
           <div className="uiset-t">Look</div>
           <Seg value={p.ui} onChange={(v) => setPref('ui', v)} options={[['glass', 'Liquid Glass'], ['classic', 'Classic dark']]} />
           {p.ui !== 'glass' && <div className="hint">Backgrounds show with the Liquid Glass look. Switch it on to see them.</div>}
+          <div className="flabel" style={{ marginTop: 6 }}>Speed vs. beauty</div>
+          <Seg value={p.quality || 'smooth'} onChange={setQuality} options={[['smooth', 'Smooth (fast)'], ['beautiful', 'Beautiful (frosted)']]} />
+          <div className="hint">{(p.quality || 'smooth') === 'smooth' ? 'Fastest. Recommended for laptops and built-in graphics.' : 'Real frosted glass. Looks best, but uses more graphics power and may feel slower.'}</div>
         </div>
 
         <div className="uiset-sec">

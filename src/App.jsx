@@ -12,7 +12,9 @@ import { LIBRARY } from './lib/library.js';
 import { DEVICES, THEMES } from './lib/constants.js';
 import { walk } from './lib/nodes.js';
 import { downloadBlob } from './lib/zip.js';
-import { getPrefs, setPref } from './lib/uiPrefs.js';
+import { getPrefs, setPref, usePrefs } from './lib/uiPrefs.js';
+import QuickApp from './components/QuickApp.jsx';
+import Home from './components/Home.jsx';
 import AppBackground from './components/AppBackground.jsx';
 import InterfaceSettings from './components/InterfaceSettings.jsx';
 
@@ -21,24 +23,28 @@ export default function App() {
   const preview = useStore((s) => s.preview);
   const set = useStore((s) => s.set);
   const toasts = useStore((s) => s.toasts);
-  const project = useStore((s) => s.project);
   useShortcuts();
+  useEffect(() => { if (getPrefs().home !== false) set({ modal: 'home' }); }, []); // eslint-disable-line
 
-  // load every font used in the project
+  // Load every font used in the project. Subscribed outside React rendering so that
+  // editing never re-renders the whole interface.
   useEffect(() => {
-    project.pages.forEach((p) => walk(p.nodes, (n) => { if (n.font) loadFont(n.font); }));
-  }, [project.pages]);
+    const scan = (pages) => pages.forEach((p) => walk(p.nodes, (n) => { if (n.font) loadFont(n.font); }));
+    scan(useStore.getState().project.pages);
+    let t;
+    return useStore.subscribe((s, prev) => {
+      if (s.project.pages === prev.project.pages) return;
+      clearTimeout(t);
+      t = setTimeout(() => scan(s.project.pages), 300);
+    });
+  }, []);
 
   return (
     <>
     <AppBackground />
     <div className="app">
       <TopBar />
-      <main className="main">
-        <LeftPanel />
-        <Canvas />
-        <Inspector />
-      </main>
+      <Main />
       {preview && <Preview />}
       {modal === 'code' && <Modal title="Code" icon="Code" wide onClose={() => set({ modal: null })}><CodeView /></Modal>}
       {modal === 'publish' && <PublishCenter onClose={() => set({ modal: null })} />}
@@ -47,14 +53,37 @@ export default function App() {
       {modal === 'shortcuts' && <Shortcuts />}
       {modal === 'palette' && <Palette />}
       {modal === 'uiSettings' && <InterfaceSettings onClose={() => set({ modal: null })} />}
+      {modal === 'quickApp' && <QuickApp onClose={() => set({ modal: null })} />}
+      {modal === 'home' && <Home onClose={() => set({ modal: null })} />}
       <div className="toasts">{toasts.map((t) => <div key={t.id} className={`toast ${t.kind}`}><Icon n={t.kind === 'warn' ? 'TriangleAlert' : 'CircleCheck'} s={15} />{t.msg}</div>)}</div>
     </div>
     </>
   );
 }
 
+function Main() {
+  const { leftOpen = true, rightOpen = true, leftW = 300, rightW = 300 } = usePrefs();
+  const drag = (side) => (e) => {
+    e.preventDefault();
+    const x0 = e.clientX, w0 = side === 'left' ? leftW : rightW;
+    const move = (ev) => setPref(side === 'left' ? 'leftW' : 'rightW', Math.round(Math.min(480, Math.max(230, w0 + (side === 'left' ? 1 : -1) * (ev.clientX - x0)))));
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); document.body.style.cursor = ''; window.dispatchEvent(new Event('resize')); };
+    document.body.style.cursor = 'col-resize';
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+  return (
+    <main className="main" style={{ gridTemplateColumns: `${leftOpen ? `${leftW}px` : ''} 1fr ${rightOpen ? `${rightW}px` : ''}`.trim() }}>
+      {leftOpen && <div className="pwrap"><LeftPanel /><div className="resizer r" onPointerDown={drag('left')} title="Drag to resize" /></div>}
+      <Canvas />
+      {rightOpen && <div className="pwrap"><Inspector /><div className="resizer l" onPointerDown={drag('right')} title="Drag to resize" /></div>}
+    </main>
+  );
+}
+
 function TopBar() {
   const project = useStore((s) => s.project);
+  const { leftOpen = true, rightOpen = true } = usePrefs();
   const page = useStore((s) => s.page());
   const past = useStore((s) => s.past.length);
   const future = useStore((s) => s.future.length);
@@ -77,6 +106,7 @@ function TopBar() {
   useEffect(() => { useStore.setState({ saveProject: save, openProject: () => fileRef.current?.click() }); });
   return (
     <header className="top">
+      <IconBtn icon="House" title="Start screen" onClick={() => S().set({ modal: 'home' })} />
       <div className="brand" onClick={() => setMenu(!menu)}>
         <img className="logo-img" src={`${import.meta.env.BASE_URL}icon.svg`} alt="" width="30" height="30" />
         <b>Forge</b><span className="pro">PRO</span>
@@ -101,18 +131,20 @@ function TopBar() {
       <input className="pname" value={project.name} onChange={(e) => S().mutate((d) => { d.name = e.target.value; }, false)} onKeyDown={(e) => e.stopPropagation()} spellCheck={false} />
       <span className="crumb"><Icon n="ChevronRight" s={12} /></span>
       <Select className="pagesel" value={page.id} onChange={(id) => S().setPage(id)} options={project.pages.map((p) => [p.id, p.name])} />
-      <Select className="devsel" value={page.device || 'custom'} onChange={(k) => { const d = DEVICES.find((x) => x.key === k); if (d) { S().updatePage({ device: k, w: d.w, h: Math.max(d.h, page.h) }); setTimeout(() => S().fitView?.(), 30); } }} options={[['custom', `Custom ${page.w}×${page.h}`], ...DEVICES.map((d) => [d.key, `${d.label}  ${d.w}×${d.h}`])]} />
       <div className="vsep" />
       <IconBtn icon="Undo2" title="Undo (Ctrl+Z)" onClick={S().undo} disabled={!past} />
       <IconBtn icon="Redo2" title="Redo (Ctrl+Shift+Z)" onClick={S().redo} disabled={!future} />
+      <div className="vsep" />
+      <IconBtn icon={leftOpen ? 'PanelLeftClose' : 'PanelLeftOpen'} title={leftOpen ? 'Hide left panel (more room)' : 'Show left panel'} onClick={() => setPref('leftOpen', !leftOpen)} />
+      <IconBtn icon={rightOpen ? 'PanelRightClose' : 'PanelRightOpen'} title={rightOpen ? 'Hide right panel (more room)' : 'Show right panel'} onClick={() => setPref('rightOpen', !rightOpen)} />
       <div className="grow" />
-      <button type="button" className="cmdk" onClick={() => S().set({ modal: 'palette' })}><Icon n="Search" s={13} /> Search actions, components… <kbd>Ctrl K</kbd></button>
+      <button type="button" className="cmdk" onClick={() => S().set({ modal: 'palette' })}><Icon n="Search" s={13} /> Search anything… <kbd>Ctrl K</kbd></button>
       <div className="grow" />
-      <Select className="themesel" value={project.theme.name} onChange={(v) => S().setTheme(v)} options={Object.keys(THEMES).map((t) => [t, `Theme: ${t}`])} />
-      <IconBtn icon="Settings2" title="Interface settings: background, glass, colours" onClick={() => S().set({ modal: S().modal === 'uiSettings' ? null : 'uiSettings' })} />
-      <button type="button" className="btn ghost" onClick={() => S().set({ modal: 'code' })} title="Code (Ctrl+E)"><Icon n="Code" s={15} /> Code</button>
-      <button type="button" className="btn ghost" onClick={() => S().set({ preview: true })} title="Preview (P)"><Icon n="Play" s={15} /> Preview</button>
-      <button type="button" className="btn primary" onClick={() => S().set({ modal: 'publish' })}><Icon n="Rocket" s={15} /> Publish</button>
+      <IconBtn icon="Settings2" title="Look & background settings" onClick={() => S().set({ modal: S().modal === 'uiSettings' ? null : 'uiSettings' })} />
+      <button type="button" className="btn ghost" onClick={() => S().set({ preview: true })} title="Try your design like a real app (P)"><Icon n="Play" s={15} /><span className="lbl">Preview</span></button>
+      <button type="button" className="btn ghost" onClick={() => S().set({ modal: 'code' })} title="See the code (Ctrl+E)"><Icon n="Code" s={15} /><span className="lbl">Code</span></button>
+      <button type="button" className="btn" onClick={() => { S().updatePublish({ source: 'html' }); S().set({ modal: 'quickApp' }); }} title="Paste HTML and get an Android APK"><Icon n="Smartphone" s={15} /><span className="lbl">HTML to App</span></button>
+      <button type="button" className="btn primary" onClick={() => S().set({ modal: 'publish' })} title="Make an APK, Windows app or website from your design"><Icon n="Rocket" s={15} /><span className="lbl">Publish</span></button>
     </header>
   );
 }
@@ -382,6 +414,7 @@ function useShortcuts() {
       if (e.shiftKey && e.code === 'Digit1') return run(() => S.fitView?.());
       if (e.shiftKey && e.code === 'Digit0') return run(() => S.zoomTo(1));
       if (e.shiftKey && k === 'a') return run(() => { const n = S.selectedNodes(); if (n.length === 1 && n[0].children) S.updateSel((d) => { d.layout.mode = d.layout.mode === 'none' ? 'column' : 'none'; }); else if (n.length) { S.group(); useStore.getState().updateSel((d) => { d.layout.mode = 'column'; d.sizeW = 'hug'; d.sizeH = 'hug'; }); } });
+      if (k === 'tab') return run(() => { const p = getPrefs(); const anyOpen = p.leftOpen !== false || p.rightOpen !== false; setPref('leftOpen', !anyOpen); setPref('rightOpen', !anyOpen); });
       if (k === '?') return run(() => S.set({ modal: 'shortcuts' }));
       if (k === ']') return run(() => S.arrange('front'));
       if (k === '[') return run(() => S.arrange('back'));

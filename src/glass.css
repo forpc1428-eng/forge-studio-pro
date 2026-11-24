@@ -44,8 +44,7 @@ html[data-ui="glass"][data-motion="off"] .liquid-bg i { animation: none; }
 html[data-ui="glass"] .app { position: relative; z-index: 1; padding: 10px; gap: 10px; }
 html[data-ui="glass"] .main { gap: 10px; }
 html[data-ui="glass"] .top,
-html[data-ui="glass"] .panel,
-html[data-ui="glass"] .stage {
+html[data-ui="glass"] .panel {
   background: var(--panel);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -55,7 +54,7 @@ html[data-ui="glass"] .stage {
 }
 html[data-ui="glass"] .top { height: 54px; padding: 0 12px; border-radius: 18px; }
 html[data-ui="glass"] .panel.left, html[data-ui="glass"] .panel.right { border-right: 1px solid var(--line); border-left: 1px solid var(--line); overflow: hidden; }
-html[data-ui="glass"] .stage { background-color: rgba(10, 6, 24, 0.42); background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px); background-size: 22px 22px; }
+html[data-ui="glass"] .stage { border: 1px solid var(--line); border-radius: var(--r-panel); box-shadow: var(--rim), var(--depth); background-color: rgba(10, 6, 24, 0.9); background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px); background-size: 22px 22px; }
 html[data-ui="glass"] .page { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 50px 120px -30px rgba(0, 0, 0, 0.85), 0 0 80px -20px rgba(157, 123, 255, 0.25); }
 html[data-ui="glass"] .ltabs, html[data-ui="glass"] .rtabs, html[data-ui="glass"] .insp-head, html[data-ui="glass"] .alignbar, html[data-ui="glass"] .sec, html[data-ui="glass"] .code-top, html[data-ui="glass"] .code-bar { border-color: var(--line); }
 html[data-ui="glass"] .insp-head { background: transparent; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
@@ -172,3 +171,7 @@ html:not([data-ui="glass"]) .uiset { background: var(--panel); backdrop-filter: 
 .bg-name { display: flex; align-items: center; gap: 5px; padding: 5px 7px 6px; font-size: 10.5px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; }
 .bg-name i { width: 8px; height: 8px; border-radius: 99px; flex-shrink: 0; }
 .bg-name em { margin-left: auto; font-style: normal; font-size: 8.5px; font-weight: 700; padding: 1px 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.12); color: var(--mute); }
+
+/* keep layout/paint work inside each region (big win when one panel changes) */
+.panel { contain: layout paint style; }
+.stage { contain: strict; }

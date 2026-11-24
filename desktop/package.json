@@ -1,7 +1,7 @@
 {
   "name": "forge-studio-pro-desktop",
   "productName": "Forge Studio Pro",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Forge Studio Pro: visual app builder (desktop edition)",
   "author": "Forge Studio",
   "license": "UNLICENSED",
@@ -20,7 +20,7 @@
     "productName": "Forge Studio Pro",
     "copyright": "Forge Studio",
     "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "app/**/*", "build/icon.png"],
+    "files": ["main.js", "preload.js", "apkBuilder.js", "app/**/*", "build/icon.png"],
     "win": {
       "target": ["nsis", "portable"],
       "icon": "build/icon.png"

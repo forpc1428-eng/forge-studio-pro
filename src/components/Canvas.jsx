@@ -9,6 +9,14 @@ import { contextItems } from './contextMenu.js';
 
 const SNAP = 6;
 
+// Run a pointer handler at most once per frame (latest event wins); flush() applies a pending one now.
+function rafThrottle(fn) {
+  let raf = 0, last = null;
+  const run = (ev) => { last = ev; if (!raf) raf = requestAnimationFrame(() => { raf = 0; fn(last); }); };
+  run.flush = () => { if (raf) { cancelAnimationFrame(raf); raf = 0; fn(last); } };
+  return run;
+}
+
 export default function Canvas() {
   const stageRef = useRef(null);
   const pageRef = useRef(null);
@@ -90,22 +98,39 @@ export default function Canvas() {
     });
   }, [fit]);
 
-  // ---------- overlay measurement loop ----------
+  // ---------- overlay measurement (event-driven: only runs when something changes) ----------
+  // Measures selection/hover boxes for a short burst of frames after any change
+  // (so entrance animations and layout settle correctly), then goes fully idle.
+  const remeasure = useRef(() => {});
   useEffect(() => {
-    let raf;
+    let raf = 0;
+    let framesLeft = 0;
     let last = '';
-    const tick = () => {
+    const measure = () => {
       const st = useStore.getState();
       if (stageRef.current && pageRef.current) {
         const sel = st.explode ? [] : st.selection.map((id) => { const r = rectOf(id); return r && { id, ...r }; }).filter(Boolean);
         const hv = hoverRef.current && !st.selection.includes(hoverRef.current) && !st.explode ? rectOf(hoverRef.current) : null;
-        const key = JSON.stringify([sel, hv]);
+        const key = sel.map((r) => `${r.id}${r.x | 0},${r.y | 0},${r.w | 0},${r.h | 0}`).join('|') + (hv ? `#${hv.x | 0},${hv.y | 0},${hv.w | 0},${hv.h | 0}` : '');
         if (key !== last) { last = key; setOv({ sel, hover: hv }); }
       }
-      raf = requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    const loop = () => {
+      measure();
+      raf = --framesLeft > 0 ? requestAnimationFrame(loop) : 0;
+    };
+    remeasure.current = (frames = 2) => {
+      framesLeft = Math.max(framesLeft, frames);
+      if (!raf) raf = requestAnimationFrame(loop);
+    };
+    const unsub = useStore.subscribe((s, prev) => {
+      if (s.selection !== prev.selection || s.project !== prev.project || s.pageId !== prev.pageId || s.playKey !== prev.playKey) remeasure.current(45);
+      else if (s.zoom !== prev.zoom || s.pan !== prev.pan || s.explode !== prev.explode || s.editingId !== prev.editingId) remeasure.current(2);
+    });
+    const onResize = () => remeasure.current(4);
+    window.addEventListener('resize', onResize);
+    remeasure.current(45);
+    return () => { unsub(); window.removeEventListener('resize', onResize); cancelAnimationFrame(raf); };
   }, []);
 
   // ---------- wheel zoom / pan ----------
@@ -166,8 +191,9 @@ export default function Canvas() {
   const startPan = (e) => {
     const sx = e.clientX, sy = e.clientY;
     const p0 = useStore.getState().pan;
-    const move = (ev) => set({ pan: { x: p0.x + ev.clientX - sx, y: p0.y + ev.clientY - sy } });
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); };
+    const move = rafThrottle((ev) => set({ pan: { x: p0.x + ev.clientX - sx, y: p0.y + ev.clientY - sy } }));
+    stageRef.current.style.cursor = 'grabbing';
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); move.flush(); stageRef.current.style.cursor = ''; };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
@@ -197,6 +223,8 @@ export default function Canvas() {
     const id = pick(chain, e.ctrlKey || e.metaKey);
     if (!id) {
       if (!e.shiftKey) set({ selection: [] });
+      // empty space around the page: drag to move the view. On the page itself: drag to select.
+      if (!pageRef.current.contains(e.target)) return startPan(e);
       return startMarquee(e);
     }
     let sel = st.selection;
@@ -229,6 +257,12 @@ export default function Canvas() {
     const pr = parent ? rectOf(parent.id) : (() => { const r = pageRef.current.getBoundingClientRect(); const s = stageRect(); return { x: r.left - s.left, y: r.top - s.top, w: r.width, h: r.height }; })();
     if (pr) { tx.push(pr.x, pr.x + pr.w / 2, pr.x + pr.w); ty.push(pr.y, pr.y + pr.h / 2, pr.y + pr.h); }
     let moved = false;
+    const ids = Object.keys(start);
+    const els = Object.fromEntries(ids.map((id) => [id, elOf(id)]));
+    let last = { dx: 0, dy: 0 };
+    let lastGuides = '';
+    let lastIdx = -1;
+    hoverRef.current = null;
     st.begin();
 
     const move = (ev) => {
@@ -248,7 +282,8 @@ export default function Canvas() {
           if ((row ? ev.clientX - s.left : ev.clientY - s.top) < mid) { idx = i; break; }
         }
         const ref = kids[idx] ? rectOf(kids[idx].id) : kids.length ? rectOf(kids[kids.length - 1].id) : null;
-        if (ref) {
+        if (ref && idx !== lastIdx) {
+          lastIdx = idx;
           const after = !kids[idx];
           setDropLine(row ? { x: after ? ref.x + ref.w + 2 : ref.x - 3, y: ref.y, w: 2, h: ref.h, idx } : { x: ref.x, y: after ? ref.y + ref.h + 2 : ref.y - 3, w: ref.w, h: 2, idx });
         }
@@ -265,14 +300,27 @@ export default function Canvas() {
         if (bx) { dx += bx.d; g.push({ type: 'v', x: bx.t }); }
         if (by) { dy += by.d; g.push({ type: 'h', y: by.t }); }
       }
-      setGuides(g);
+      const gk = g.map((x) => `${x.type}${x.x ?? x.y}`).join();
+      if (gk !== lastGuides) { lastGuides = gk; setGuides(g); }
+      // Move the elements directly on screen (no app-wide re-render per mouse move);
+      // the real position is saved once on release.
       const z = useStore.getState().zoom;
-      useStore.getState().update(Object.keys(start), (n) => { n.x = Math.round(start[n.id].x + dx / z); n.y = Math.round(start[n.id].y + dy / z); }, false);
+      last = { dx: dx / z, dy: dy / z };
+      for (const id of ids) {
+        const el = els[id];
+        if (!el) continue;
+        el.style.left = `${Math.round(start[id].x + last.dx)}px`;
+        el.style.top = `${Math.round(start[id].y + last.dy)}px`;
+      }
+      remeasure.current(1);
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       setGuides([]);
+      if (!flow && moved) {
+        useStore.getState().update(ids, (n) => { n.x = Math.round(start[n.id].x + last.dx); n.y = Math.round(start[n.id].y + last.dy); }, false);
+      }
       if (flow && moved) {
         setDropLine((dl) => {
           if (dl) {
@@ -360,7 +408,7 @@ export default function Canvas() {
     const ratio = s0.w / (s0.h || 1);
     const sx = e.clientX, sy = e.clientY;
     st.begin();
-    const move = (ev) => {
+    const move = rafThrottle((ev) => {
       const dx = (ev.clientX - sx) / z, dy = (ev.clientY - sy) / z;
       let { x, y, w, h } = s0;
       if (dir.includes('e')) w = s0.w + dx;
@@ -380,8 +428,8 @@ export default function Canvas() {
         if (dir.includes('n') || dir.includes('s')) { d.h = h; d.sizeH = 'fixed'; if (!flow) d.y = Math.round(y); }
         if ((ev.shiftKey || n.lockRatio)) { d.w = w; d.h = h; d.sizeW = 'fixed'; d.sizeH = 'fixed'; if (!flow) { d.x = Math.round(x); d.y = Math.round(y); } }
       }, false);
-    };
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); useStore.getState().commit(); };
+    });
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); move.flush(); useStore.getState().commit(); };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
@@ -398,13 +446,13 @@ export default function Canvas() {
     const a0 = Math.atan2(e.clientY - cy, e.clientX - cx);
     const r0 = n.rotation || 0;
     st.begin();
-    const move = (ev) => {
+    const move = rafThrottle((ev) => {
       let a = r0 + ((Math.atan2(ev.clientY - cy, ev.clientX - cx) - a0) * 180) / Math.PI;
       if (ev.shiftKey) a = Math.round(a / 15) * 15;
       a = Math.round(((a % 360) + 540) % 360 - 180);
       useStore.getState().update(id, { rotation: a }, false);
-    };
-    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); useStore.getState().commit(); };
+    });
+    const up = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); move.flush(); useStore.getState().commit(); };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
@@ -428,11 +476,10 @@ export default function Canvas() {
   };
 
   const onMove = (e) => {
-    if (explode) return;
+    if (explode || e.buttons) return; // no hover work while dragging
     const target = e.target.closest?.('[data-nid]');
-    if (!target) { hoverRef.current = null; return; }
-    const chain = chainFor(target);
-    hoverRef.current = pick(chain, e.ctrlKey || e.metaKey);
+    const next = target ? pick(chainFor(target), e.ctrlKey || e.metaKey) : null;
+    if (next !== hoverRef.current) { hoverRef.current = next; remeasure.current(1); }
   };
 
   const onContext = (e) => {
@@ -492,7 +539,7 @@ export default function Canvas() {
       ref={stageRef}
       onPointerDown={onPointerDown}
       onPointerMove={onMove}
-      onPointerLeave={() => { hoverRef.current = null; }}
+      onPointerLeave={() => { if (hoverRef.current) { hoverRef.current = null; remeasure.current(1); } }}
       onDoubleClick={onDoubleClick}
       onContextMenu={onContext}
       onDragOver={(e) => e.preventDefault()}
@@ -557,20 +604,20 @@ function CanvasToolbar() {
   const snap = useStore((s) => s.snap);
   const set = useStore((s) => s.set);
   const tools = [
-    ['select', 'MousePointer2', 'Select (V)'], ['hand', 'Hand', 'Hand (H)'], ['frame', 'Frame', 'Frame (F)'], ['rect', 'Square', 'Rectangle (R)'],
-    ['ellipse', 'Circle', 'Ellipse (O)'], ['text', 'Type', 'Text (T)'], ['image', 'Image', 'Image (I)'], ['three', 'Box', '3D object (D)'],
+    ['select', 'MousePointer2', 'Select and move things (V)'], ['hand', 'Hand', 'Move the view (H) or drag empty space'], ['frame', 'Frame', 'Draw a box / container (F)'], ['rect', 'Square', 'Draw a rectangle (R)'],
+    ['ellipse', 'Circle', 'Draw a circle (O)'], ['text', 'Type', 'Add text (T)'], ['image', 'Image', 'Add a picture (I)'], ['three', 'Box', 'Add a 3D object (D)'],
   ];
   return (
     <div className="ctool" onPointerDown={(e) => e.stopPropagation()}>
       {tools.map(([k, ic, t]) => <IconBtn key={k} icon={ic} title={t} active={tool === k} onClick={() => set({ tool: k })} />)}
       <div className="vsep" />
-      <IconBtn icon="Grid3x3" title="Grid" active={grid} onClick={() => set({ grid: !grid })} />
-      <IconBtn icon="Magnet" title="Smart snapping" active={snap} onClick={() => set({ snap: !snap })} />
-      <IconBtn icon="Rotate3d" title="3D layer view (3)" active={explode} onClick={() => set({ explode: !explode, selection: [] })} />
-      <IconBtn icon="Play" title="Replay animations" onClick={() => set((s) => ({ playKey: s.playKey + 1 }))} />
+      <IconBtn icon="Grid3x3" title="Show grid lines" active={grid} onClick={() => set({ grid: !grid })} />
+      <IconBtn icon="Magnet" title="Snap to other items (pink guide lines)" active={snap} onClick={() => set({ snap: !snap })} />
+      <IconBtn icon="Rotate3d" title="See the page in 3D layers (3)" active={explode} onClick={() => set({ explode: !explode, selection: [] })} />
+      <IconBtn icon="Play" title="Play animations again" onClick={() => set((s) => ({ playKey: s.playKey + 1 }))} />
       <div className="vsep" />
       <IconBtn icon="Minus" title="Zoom out" onClick={() => useStore.getState().zoomTo(Math.max(0.03, zoom / 1.25))} />
-      <button type="button" className="zoomval" onClick={() => useStore.getState().fitView()} title="Fit (Shift+1)">{Math.round(zoom * 100)}%</button>
+      <button type="button" className="zoomval" onClick={() => useStore.getState().fitView()} title="Fit page to screen (Shift+1)">{Math.round(zoom * 100)}%</button>
       <IconBtn icon="Plus" title="Zoom in" onClick={() => useStore.getState().zoomTo(Math.min(8, zoom * 1.25))} />
     </div>
   );

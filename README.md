@@ -39,6 +39,23 @@ GitHub only hosts the files. All editing, 3D rendering, code generation and app 
 * **Smooth 3D:** scenes request the high-performance GPU, stop rendering when off screen or when the tab is hidden, and automatically lower resolution on slower devices and raise it again when frames are smooth. Exported apps use the same off-screen pause.
 * **No jank:** autosave waits until the browser is idle, and the 3D engine loads as a separate chunk only when it's needed.
 
+## HTML to App (one click)
+
+Start screen → **HTML to App** (or the button in the top bar):
+
+1. **Paste** your HTML, **upload** a `.html`/`.zip`, or enter a **website link**. A live phone preview shows it running.
+2. Type the **app name** and pick an icon colour and symbol, or upload your own icon.
+3. **Permissions:** tick **Turn on ALL permissions** (37 Android permissions; Android asks for the 22 sensitive ones with pop-ups when the app first opens), or switch on just Camera, Microphone, Location, Files, Notifications and so on.
+4. Click **Make Android APK**.
+
+In the **desktop app** or **local mode** (`Start Forge Pro.bat`), this builds the real `.apk` on your PC (about 20–40 s) and saves it to **Downloads**. It needs Java + Android SDK (Android Studio installs both). On the public website, browsers can't run Android tools, so you get the ready project `.zip` instead.
+
+## Moving around
+
+* **Drag empty space** around the page to move the view; **scroll** to move, **Ctrl + scroll** to zoom.
+* **Hide panels** with the buttons in the top bar, or press **Tab** to hide or show both. **Drag a panel's edge** to resize it.
+* The **Add** tab shows categories first. Click one, then click a part to add it.
+
 ## What's inside
 
 | Area | What you get |

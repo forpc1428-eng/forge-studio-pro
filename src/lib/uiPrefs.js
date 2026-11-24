@@ -41,12 +41,15 @@ export const BG_PRESETS = {
   'Royal Gradient': { bg: { ...DEFAULT_BG, color: '#0d0b1f', colors: ['#1e1b4b', '#6d28d9', '#db2777'], mode: 'gradient', angle: 145 }, accent: '#f5c542', tint: '#1a1640' },
 };
 
-const defaults = { ui: 'glass', motion: 'on', bg: DEFAULT_BG, accent: '#9d7bff', tint: '#16102c', panelOpacity: 0.52, panelBlur: 26 };
+// v2: 'smooth' quality by default — solid-tinted panels with no live blur (fast on built-in graphics)
+const defaults = { v: 2, ui: 'glass', motion: 'on', quality: 'smooth', bg: DEFAULT_BG, accent: '#9d7bff', tint: '#16102c', panelOpacity: 0.88, panelBlur: 0 };
 
 function load() {
   try {
     const p = JSON.parse(localStorage.getItem(KEY) || '{}');
-    return { ...defaults, ...p, bg: { ...DEFAULT_BG, ...(p.bg || {}) } };
+    // older saved settings used heavy live blur; move them to the fast default once
+    if (!p.v) { delete p.panelBlur; delete p.panelOpacity; delete p.quality; }
+    return { ...defaults, ...p, v: 2, bg: { ...DEFAULT_BG, ...(p.bg || {}) } };
   } catch { return { ...defaults }; }
 }
 
@@ -69,7 +72,7 @@ export function applyPrefs(p = state) {
   el.dataset.motion = p.motion;
   const vars = {
     '--panel': rgba(p.tint, p.panelOpacity),
-    '--glass-blur': `blur(${p.panelBlur}px) saturate(175%)`,
+    '--glass-blur': p.panelBlur > 0 ? `blur(${p.panelBlur}px) saturate(175%)` : 'none',
     '--acc': p.accent,
     '--acc-soft': rgba(p.accent, 0.2),
     '--bg': p.bg.color,
@@ -94,6 +97,12 @@ export function setPref(k, v) {
 }
 
 export const setBg = (patch) => setPref('bg', { ...state.bg, ...patch });
+
+/** Smooth = fast (no live blur). Beautiful = real frosted glass (uses more graphics power). */
+export function setQuality(q) {
+  state = { ...state, quality: q, ...(q === 'beautiful' ? { panelBlur: 24, panelOpacity: 0.55 } : { panelBlur: 0, panelOpacity: 0.88 }) };
+  save(); applyPrefs(state); subs.forEach((f) => f());
+}
 
 export function applyPreset(name) {
   const pr = BG_PRESETS[name];

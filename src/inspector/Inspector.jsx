@@ -15,7 +15,7 @@ export default function Inspector() {
   return (
     <aside className="panel right">
       <div className="rtabs">
-        {[['design', 'Design', 'Palette'], ['motion', 'Motion', 'Sparkles'], ['code', 'Code', 'Code']].map(([k, l, ic]) => (
+        {[['design', 'Style', 'Palette'], ['motion', 'Animate', 'Sparkles'], ['code', 'Code', 'Code']].map(([k, l, ic]) => (
           <button type="button" key={k} className={tab === k ? 'on' : ''} onClick={() => set({ rightTab: k })}><Icon n={ic} s={14} />{l}</button>
         ))}
       </div>
@@ -54,7 +54,7 @@ function PageProps() {
         <Row label="Height"><div className="btnrow">{[1, 1.5, 2, 3, 4].map((k) => <button type="button" key={k} className="chip" onClick={() => { const d = DEVICES.find((x) => x.key === page.device); up({ h: Math.round((d?.h || 1024) * k) }); }}>×{k}</button>)}</div></Row>
       </Section>
       <FillSection fill={page.fill || { type: 'solid', color: '#0b0b12' }} onChange={(f, r) => S().mutate((d) => { d.pages.find((p) => p.id === page.id).fill = f; }, r)} title="Background" />
-      <Section title="Theme" icon="SwatchBook">
+      <Section title="Colour theme" icon="SwatchBook">
         <div className="themes">
           {Object.entries(THEMES).map(([name, t]) => (
             <button type="button" key={name} className={`theme ${theme.name === name ? 'on' : ''}`} onClick={() => S().setTheme(name)} title={`Recolour everything to ${name}`}>
@@ -126,15 +126,15 @@ function DesignProps({ nodes }) {
         <IconBtn icon="AlignVerticalSpaceAround" title="Distribute vertically" onClick={() => S().distribute('v')} disabled={nodes.length < 3} />
       </div>
 
-      <Section title="Layout" icon="Move">
+      <Section title="Position & size" icon="Move">
         {!flow && <Row cols="1fr 1fr"><Num label="X" value={n.x} onChange={(v, r) => setP('x', v, r)} /><Num label="Y" value={n.y} onChange={(v, r) => setP('y', v, r)} /></Row>}
         <Row cols="1fr 1fr auto">
           <Num label="W" value={n.w} min={1} onChange={(v, r) => update((d) => { d.w = v; d.sizeW = 'fixed'; if (d.lockRatio) d.h = Math.round(v / (n.w / n.h)); }, r)} disabled={n.sizeW !== 'fixed'} />
           <Num label="H" value={n.h} min={1} onChange={(v, r) => update((d) => { d.h = v; d.sizeH = 'fixed'; if (d.lockRatio) d.w = Math.round(v * (n.w / n.h)); }, r)} disabled={n.sizeH !== 'fixed'} />
           <IconBtn icon={n.lockRatio ? 'Link' : 'Unlink'} title="Lock aspect ratio" active={n.lockRatio} onClick={() => setP('lockRatio', !n.lockRatio)} />
         </Row>
-        <Row label="Width" cols="1fr"><Seg small value={n.sizeW} onChange={(v) => setP('sizeW', v)} options={[['fixed', 'Fixed'], ['hug', 'Hug'], ...(flow ? [['fill', 'Fill']] : [])]} /></Row>
-        <Row label="Height" cols="1fr"><Seg small value={n.sizeH} onChange={(v) => setP('sizeH', v)} options={[['fixed', 'Fixed'], ['hug', 'Hug'], ...(flow ? [['fill', 'Fill']] : [])]} /></Row>
+        <Row label="Width" cols="1fr"><Seg small value={n.sizeW} onChange={(v) => setP('sizeW', v)} options={[['fixed', 'Exact size'], ['hug', 'Fit content'], ...(flow ? [['fill', 'Stretch']] : [])]} /></Row>
+        <Row label="Height" cols="1fr"><Seg small value={n.sizeH} onChange={(v) => setP('sizeH', v)} options={[['fixed', 'Exact size'], ['hug', 'Fit content'], ...(flow ? [['fill', 'Stretch']] : [])]} /></Row>
         <Row cols="1fr 1fr"><Num icon="RotateCw" value={n.rotation} onChange={(v, r) => setP('rotation', v, r)} suffix="°" /><Num icon="Blend" value={Math.round(n.opacity * 100)} min={0} max={100} onChange={(v, r) => setP('opacity', v / 100, r)} suffix="%" /></Row>
         <Row cols="auto auto auto 1fr">
           <IconBtn icon="FlipHorizontal2" title="Flip horizontal" onClick={() => setP('rotation', (n.rotation || 0) === 0 ? 180 : 0)} />
@@ -148,10 +148,10 @@ function DesignProps({ nodes }) {
       <TypeSection n={n} setP={setP} setDeep={setDeep} update={update} />
       {(n.type === 'text' || n.type === 'input') && <TypographySection n={n} setP={setP} />}
       {!['toggle', 'checkbox', 'slider', 'progress', 'icon'].includes(n.type) && (
-        <FillSection fill={n.fill} title={n.type === 'text' ? (n.gradText ? 'Text gradient' : 'Highlight / background') : 'Fill'} onChange={(f, r) => update((d) => { d.fill = f; }, r)} allowImage />
+        <FillSection fill={n.fill} title={n.type === 'text' ? (n.gradText ? 'Text gradient' : 'Highlight behind text') : 'Colour / background'} onChange={(f, r) => update((d) => { d.fill = f; }, r)} allowImage />
       )}
       <StrokeSection n={n} update={update} />
-      <Section title="Corners" icon="Squircle">
+      <Section title="Rounded corners" icon="Squircle">
         <Row cols="1fr auto">
           <Slider value={n.radii ? n.radii[0] : n.radius} max={Math.max(200, n.radius)} onChange={(v, r) => update((d) => { d.radius = v; d.radii = null; }, r)} />
           <IconBtn icon="Scan" title="Individual corners" active={!!n.radii} onClick={() => setP('radii', n.radii ? null : [n.radius, n.radius, n.radius, n.radius])} />
@@ -160,7 +160,7 @@ function DesignProps({ nodes }) {
         <div className="btnrow">{[0, 4, 8, 12, 16, 24, 32, 999].map((r) => <button type="button" key={r} className="chip" onClick={() => update((d) => { d.radius = r; d.radii = null; })}>{r === 999 ? 'Full' : r}</button>)}</div>
       </Section>
       <EffectsSection n={n} update={update} setP={setP} />
-      <Section title="Interaction" icon="MousePointerClick" defaultOpen={false}>
+      <Section title="When clicked" icon="MousePointerClick" defaultOpen={false}>
         <InteractionFields n={n} setDeep={setDeep} setP={setP} />
       </Section>
     </>
@@ -171,7 +171,7 @@ function AutoLayoutSection({ n, update }) {
   const L = n.layout;
   const set = (k, v, r) => update((d) => { d.layout = { ...d.layout, [k]: v }; }, r);
   return (
-    <Section title="Auto layout" icon="LayoutPanelTop" right={
+    <Section title="Arrange items inside (row / column)" icon="LayoutPanelTop" right={
       <Seg small value={L.mode} onChange={(v) => update((d) => { d.layout.mode = v; if (v !== 'none' && d.sizeW === 'fixed' && d.sizeH === 'fixed') { /* keep */ } })} options={[['none', 'Off', 'Ban'], ['row', 'Row', 'ArrowRight'], ['column', 'Column', 'ArrowDown']]} />
     }>
       {L.mode !== 'none' ? (
@@ -250,7 +250,7 @@ function StrokeSection({ n, update }) {
   const b = n.border || { w: 0, color: '#ffffff33', style: 'solid' };
   const set = (k, v, r) => update((d) => { d.border = { ...b, ...d.border, [k]: v }; }, r);
   return (
-    <Section title="Stroke" icon="SquareDashed" defaultOpen={b.w > 0} right={<IconBtn icon={b.w ? 'Minus' : 'Plus'} size={12} title={b.w ? 'Remove' : 'Add'} onClick={() => set('w', b.w ? 0 : 1)} />}>
+    <Section title="Border" icon="SquareDashed" defaultOpen={b.w > 0} right={<IconBtn icon={b.w ? 'Minus' : 'Plus'} size={12} title={b.w ? 'Remove' : 'Add'} onClick={() => set('w', b.w ? 0 : 1)} />}>
       {b.w > 0 ? (
         <>
           <ColorField value={b.color} onChange={(c) => set('color', c)} />
@@ -267,7 +267,7 @@ function EffectsSection({ n, update, setP }) {
   const f = n.filters || {};
   const setF = (k, v, r) => update((d) => { d.filters = { ...(d.filters || {}), [k]: v }; }, r);
   return (
-    <Section title="Effects" icon="Sparkle" defaultOpen={sh.length > 0 || n.backdrop > 0 || n.blur > 0}>
+    <Section title="Shadow, blur & effects" icon="Sparkle" defaultOpen={sh.length > 0 || n.backdrop > 0 || n.blur > 0}>
       <div className="sub-h">Shadows <div className="grow" /><IconBtn icon="Plus" size={12} title="Add shadow" onClick={() => setSh([...sh, { x: 0, y: 8, blur: 24, spread: 0, color: '#00000066', inset: false }])} /></div>
       <div className="btnrow">{Object.keys(SHADOW_PRESETS).map((k) => <button type="button" key={k} className="chip" onClick={() => setSh(JSON.parse(JSON.stringify(SHADOW_PRESETS[k])))}>{k}</button>)}<button type="button" className="chip" onClick={() => setSh([])}>None</button></div>
       {sh.map((s, i) => (
@@ -295,7 +295,7 @@ function EffectsSection({ n, update, setP }) {
 
 function TypographySection({ n, setP }) {
   return (
-    <Section title="Typography" icon="Type">
+    <Section title="Text style" icon="Type">
       <Row><FontPicker value={n.font} onChange={(v) => setP('font', v)} /></Row>
       <Row cols="1fr 1fr"><Num label="Size" value={n.fs} min={1} max={800} onChange={(v, r) => setP('fs', v, r)} />{n.type === 'text' && <Select value={String(n.fw)} onChange={(v) => setP('fw', Number(v))} options={WEIGHTS.map((w) => [String(w), `${w} ${['Thin', 'ExtraLight', 'Light', 'Regular', 'Medium', 'SemiBold', 'Bold', 'ExtraBold', 'Black'][w / 100 - 1]}`])} />}</Row>
       {n.type === 'text' && <Row cols="1fr 1fr"><Num icon="ArrowUpDown" value={n.lh} step={0.05} min={0.5} max={4} onChange={(v, r) => setP('lh', v, r)} title="Line height" /><Num icon="ArrowLeftRight" value={n.ls} step={0.1} min={-20} max={50} onChange={(v, r) => setP('ls', v, r)} title="Letter spacing" /></Row>}
@@ -427,7 +427,7 @@ function TypeSection({ n, setP, update }) {
       );
     case 'three':
       return (
-        <Section title="3D scene" icon="Box">
+        <Section title="3D object" icon="Box">
           <div className="shape-grid">
             {SHAPES.map((s) => <button type="button" key={s} className={n.shape === s ? 'on' : ''} onClick={() => setP('shape', s)}>{s}</button>)}
           </div>
@@ -488,7 +488,7 @@ function MotionProps({ nodes }) {
   return (
     <>
       <div className="insp-head"><span className="tag"><Icon n="Sparkles" s={12} /> Motion</span><b>{nodes.length > 1 ? `${nodes.length} layers` : n.name}</b><div className="grow" /><button type="button" className="btn sm" onClick={replay}><Icon n="Play" s={12} /> Play</button></div>
-      <Section title="Entrance" icon="LogIn">
+      <Section title="When it appears" icon="LogIn">
         <div className="fx-grid">
           {ENTER_ANIMS.map((k) => <button type="button" key={k} className={a.enter === k ? 'on' : ''} onClick={() => { setDeep('anim', 'enter', k); setTimeout(replay, 30); }}>{k}</button>)}
         </div>
@@ -500,15 +500,15 @@ function MotionProps({ nodes }) {
           </>
         )}
       </Section>
-      <Section title="Hover effect" icon="MousePointer2">
+      <Section title="When the mouse is over it" icon="MousePointer2">
         <div className="fx-grid">{HOVER_FX.map((k) => <button type="button" key={k} className={a.hover === k ? 'on' : ''} onClick={() => setDeep('anim', 'hover', k)}>{k}</button>)}</div>
         <div className="hint">Hover the layer on the canvas or in Preview to try it.</div>
       </Section>
-      <Section title="Loop" icon="Repeat">
+      <Section title="Keeps moving (loop)" icon="Repeat">
         <div className="fx-grid">{LOOP_FX.map((k) => <button type="button" key={k} className={a.loop === k ? 'on' : ''} onClick={() => setDeep('anim', 'loop', k)}>{k}</button>)}</div>
         {a.loop !== 'none' && <Slider label="Cycle" value={a.loopDur ?? 3000} min={200} max={20000} step={100} suffix="ms" onChange={(v, r) => setDeep('anim', 'loopDur', v, r)} />}
       </Section>
-      <Section title="Stagger children" icon="ListOrdered" defaultOpen={false}>
+      <Section title="Animate items one after another" icon="ListOrdered" defaultOpen={false}>
         <div className="hint">Give every child of the selected frame the same entrance, each one a little later.</div>
         <div className="btnrow">
           {['up', 'fade', 'zoom', 'blur', 'left'].map((k) => (

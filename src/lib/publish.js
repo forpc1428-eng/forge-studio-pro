@@ -69,7 +69,29 @@ export const PRESETS = {
   'Maps & delivery': ['INTERNET', 'ACCESS_NETWORK_STATE', 'ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION', 'POST_NOTIFICATIONS'],
   'Social / media': ['INTERNET', 'ACCESS_NETWORK_STATE', 'CAMERA', 'RECORD_AUDIO', 'READ_MEDIA_IMAGES', 'READ_MEDIA_VIDEO', 'POST_NOTIFICATIONS', 'VIBRATE'],
   'Offline (no internet)': [],
+  'Everything (all permissions)': PERMISSIONS.flatMap((g) => g.items.map((i) => i[0])),
 };
+
+/** Every permission Forge knows, and the ones Android asks the user about when the app opens. */
+export const ALL_PERMISSIONS = PERMISSIONS.flatMap((g) => g.items.map((i) => i[0]));
+export const BASIC_PERMISSIONS = ['INTERNET', 'ACCESS_NETWORK_STATE'];
+export const isAsked = (id) => DANGEROUS.has(id);
+
+/** Simple on/off switches for HTML to App (each turns on a group of real Android permissions). */
+export const SIMPLE_PERMS = [
+  ['Camera', 'Camera', ['CAMERA']],
+  ['Microphone', 'Mic', ['RECORD_AUDIO', 'MODIFY_AUDIO_SETTINGS']],
+  ['Location', 'MapPin', ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION']],
+  ['Photos & files', 'Images', ['READ_MEDIA_IMAGES', 'READ_MEDIA_VIDEO', 'READ_MEDIA_AUDIO', 'READ_EXTERNAL_STORAGE', 'WRITE_EXTERNAL_STORAGE']],
+  ['Notifications', 'Bell', ['POST_NOTIFICATIONS']],
+  ['Vibration', 'Vibrate', ['VIBRATE']],
+  ['Contacts', 'Contact', ['READ_CONTACTS', 'WRITE_CONTACTS']],
+  ['Bluetooth', 'Bluetooth', ['BLUETOOTH_CONNECT', 'BLUETOOTH_SCAN']],
+  ['Calls & SMS', 'Phone', ['CALL_PHONE', 'READ_PHONE_STATE', 'SEND_SMS', 'READ_SMS']],
+  ['Calendar', 'Calendar', ['READ_CALENDAR', 'WRITE_CALENDAR']],
+  ['Keep screen on', 'Sun', ['WAKE_LOCK']],
+  ['Fitness sensors', 'Activity', ['BODY_SENSORS', 'ACTIVITY_RECOGNITION']],
+];
 
 // ---------- helpers ----------
 export const slug = (s) => (String(s || 'my-app').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'my-app');
@@ -94,7 +116,14 @@ const luma = (hex) => { const h = hexOnly(hex).slice(1); const [r, g, b] = [0, 2
 
 // ---------- icon rendering ----------
 function loadImg(src) {
-  return new Promise((res, rej) => { const i = new Image(); i.crossOrigin = 'anonymous'; i.onload = () => res(i); i.onerror = rej; i.src = src; });
+  return new Promise((res, rej) => {
+    const i = new Image();
+    // only remote images need CORS; data:/blob: images are local (and CORS on them breaks in the desktop app)
+    if (/^https?:/i.test(src)) i.crossOrigin = 'anonymous';
+    i.onload = () => res(i);
+    i.onerror = () => rej(new Error(`Could not load the icon image${/^https?:/i.test(src) ? ` (${src.slice(0, 60)})` : ''}`));
+    i.src = src;
+  });
 }
 function shapePath(ctx, s, shape) {
   ctx.beginPath();
@@ -116,14 +145,16 @@ export async function renderIcon(cfg, size, { full = false, padScale = 1, bg = t
   }
   const pad = (size * (cfg.iconPadding / 100)) * padScale + (full ? size * 0.17 : 0);
   if (cfg.icon) {
-    try { if (!uploadCache.has(cfg.icon)) uploadCache.set(cfg.icon, loadImg(cfg.icon)); const img = await uploadCache.get(cfg.icon); const s = size - pad * 2; const k = Math.max(s / img.width, s / img.height) * (cfg.iconFit === 'contain' ? Math.min(s / img.width, s / img.height) / Math.max(s / img.width, s / img.height) : 1); const w = img.width * k, h = img.height * k; ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h); } catch { /* ignore */ }
+    try { if (!uploadCache.has(cfg.icon)) uploadCache.set(cfg.icon, loadImg(cfg.icon).catch((e) => { uploadCache.delete(cfg.icon); throw e; })); const img = await uploadCache.get(cfg.icon); const s = size - pad * 2; const k = Math.max(s / img.width, s / img.height) * (cfg.iconFit === 'contain' ? Math.min(s / img.width, s / img.height) / Math.max(s / img.width, s / img.height) : 1); const w = img.width * k, h = img.height * k; ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h); } catch { /* ignore */ }
   } else {
     const fg = cfg.iconFg || (luma(cfg.iconBg) > 0.6 ? '#111111' : '#ffffff');
     const svg = renderToStaticMarkup(React.createElement(LucideIcon, { name: cfg.iconGlyph || 'Zap', size: 256, color: fg, stroke: cfg.iconStroke || 2 }))
-      .replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" ');
+      // a standalone SVG image needs exactly one xmlns (lucide usually includes it already)
+      .replace(/^<svg (?![^>]*\bxmlns=)/, '<svg xmlns="http://www.w3.org/2000/svg" ');
     if (!glyphCache.has(svg)) {
-      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
-      glyphCache.set(svg, loadImg(url).finally(() => setTimeout(() => URL.revokeObjectURL(url), 1000)));
+      // a data: URL works everywhere (website, local and the desktop app's app:// origin)
+      const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+      glyphCache.set(svg, loadImg(url).catch((e) => { glyphCache.delete(svg); throw e; }));
     }
     const img = await glyphCache.get(svg);
     const s = size - pad * 2;

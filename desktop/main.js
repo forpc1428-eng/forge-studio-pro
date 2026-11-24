@@ -1,7 +1,8 @@
 // Forge Studio Pro: desktop edition (Electron).
 // Serves the built editor from a private app:// origin so storage (IndexedDB), module scripts
 // and the 3D engine behave exactly like the website, fully offline.
-const { app, BrowserWindow, Menu, shell, protocol, net, session } = require('electron');
+const { app, BrowserWindow, Menu, shell, protocol, net, session, ipcMain } = require('electron');
+const apk = require('./apkBuilder.js');
 const path = require('path');
 const { pathToFileURL } = require('url');
 
@@ -75,6 +76,13 @@ app.whenReady().then(() => {
   });
   // allow camera / mic / notifications etc. for web APIs used inside designs and previews
   session.defaultSession.setPermissionRequestHandler((_wc, _perm, cb) => cb(true));
+  // One-click APK: the editor sends the generated Android project, we build it here.
+  ipcMain.handle('forge:apk-tools', () => apk.checkTools());
+  ipcMain.handle('forge:build-apk', async (e, opts) => {
+    const onLog = (line) => { if (!e.sender.isDestroyed()) e.sender.send('forge:apk-log', line); };
+    return apk.buildApk({ ...opts, outDir: app.getPath('downloads'), onLog });
+  });
+  ipcMain.handle('forge:reveal', (_e, p) => { if (typeof p === 'string' && p.endsWith('.apk')) apk.revealFile(p); });
   createWindow();
 });
 
